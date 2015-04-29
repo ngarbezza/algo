@@ -1,0 +1,61 @@
+Ejercicio 4
+===========
+
+i) en orden no decreciente de los Mi:
+
+Demostración por contraejemplo:
+
+Tenemos
+    D1: M1 = 4, Π1 = 4
+    D2: M2 = 2, Π2 = 1
+
+Siguiendo la estrategia greedy debemos poner D2 antes que D1
+
+T_D2_D1 (tiempo total de lectura poniendo D2 antes de D1)
+  = M2.Π2 + (M2.Π1 + M1.Π1) = 2.1 + (2.4 + 4.4) = 26
+
+T_D1_D2 (tiempo total de lectura poniendo D1 antes de D2)
+  = M1.Π1 + (M1.Π2 + M2.Π2) = 4.4 + (4.1 + 2.1) = 22
+
+Entonces, no es una estrategia greedy correcta.
+
+ii) en orden no creciente de los Πi
+
+Demostración por contraejemplo:
+
+Tenemos
+    D1: M1 = 2, Π1 = 1
+    D2: M2 = 4, Π2 = 1
+
+Siguiendo la estrategia greedy debemos poner D2 antes que D1
+
+T_D2_D1 (tiempo total de lectura poniendo D2 antes de D1)
+  = M2.Π2 + (M2.Π1 + M1.Π1) = 4.1 + (4.1 + 2.1) = 10
+
+T_D1_D2 (tiempo total de lectura poniendo D1 antes de D2)
+  = M1.Π1 + (M1.Π2 + M2.Π2) = 2.1 + (2.1 + 4.1) = 8
+
+Entonces, no es una estrategia greedy correcta.
+
+iii) en orden no creciente de Πi/Mi
+
+Demostración por absurdo:
+
+Hipótesis: Si un elemento i está en la cinta antes que k se da que Πi/Mi < Πk/Mk
+(que no podría ser posible si la estrategia fuese correcta)
+
+Tik = Πi.Mi + (Πk.Mi + Πk.Mk)
+
+Tki = Πk.Mk + (Πi.Mk + Πi.Mi)
+
+Tik <? Tki
+
+Πi.Mi + (Πk.Mi + Πk.Mk) <? Πk.Mk + (Πi.Mk + Πi.Mi)
+
+Πk.Mi + Πk.Mk <? Πk.Mk + Πi.Mk
+
+Πk.Mi <? Πi.Mk
+
+Πk/Mk <? Πi/Mi
+
+Viendo la hipótesis, llegamos a una contradicción

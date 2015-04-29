@@ -1,12 +1,12 @@
-# def mergesort(xs)
-#   return [xs, 0] if xs.length <= 1
+def mergesort(xs)
+  return [xs, 0] if xs.length <= 1
   
-#   mindex = xs.length / 2
-#   left = mergesort(xs.take(mindex))
-#   right = mergesort(xs.drop(mindex))
+  mindex = xs.length / 2
+  left = mergesort(xs.take(mindex))
+  right = mergesort(xs.drop(mindex))
 
-#   merge(left, right)
-# end
+  merge(left, right)
+end
 
 # def merge(left_result, right_result)
 #   left = left_result[0]
