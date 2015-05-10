@@ -11,16 +11,18 @@ def hay_ciclo?(gl)
 end
 
 def hay_ciclo_aux(gl, s, vs)
-  # detecta un ciclo en un grafo comenzando por un vértice s
+  # detecta un ciclo en un grafo comenzando por un vértice s,
+  # teniendo en cuenta ciertos nodos visitados denotados por
+  # el arreglo vs
   gl[s].each do |v|
-    return true if vs[v]
-    vs[v] = true # visitado
+    return true if vs[v]   # ciclo detectado
+    vs[v] = true
     return true if hay_ciclo_aux(gl, v, vs)
   end
   false
 end
 
 puts hay_ciclo?([[1,2], [0,2], [0,1]])
-puts hay_ciclo?([[], [], []])
-puts hay_ciclo?([[1,2,3], [4], [], [], []])
+puts !hay_ciclo?([[], [], []])
+puts !hay_ciclo?([[1,2,3], [4], [], [], []])
 puts hay_ciclo?([[1], [2,3], [3,4], [2]])
