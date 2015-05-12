@@ -1,11 +1,13 @@
+# Para grafos no dirigidos
+
 def cantidad_de_componentes_conexas(gl)
   vs = [false] * gl.length
-  s = 0 # partimos de un vértice arbitrario
+  s = 0                 # partimos de un vértice arbitrario
   cant = 0
   while vertices_sin_visitar?(vs)
     vs[s] = true
     marcar_alcanzables(gl, s, vs)
-    cant += 1 # una componente más
+    cant += 1           # una componente más
     s = vs.index(false) # próximo sin visitar
   end
   cant

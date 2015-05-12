@@ -1,7 +1,7 @@
 def cantidad_de_caminos(gl, v, w)
   # denota cuántos caminos hay desde el vértice v hasta el vértice w
   # en el grafo gl, que está representado con una lista de adyacencias.
-  # PRECONDICION: asume que el grafo no tiene ciclos.
+  # PRECONDICIÓN: asume que el grafo no tiene ciclos.
   resultado = 0
   gl[v].each do |n|
     resultado += 1 if n == w                   # si ya llegué a w

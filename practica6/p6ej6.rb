@@ -28,3 +28,7 @@ puts hay_ciclo?([[1,2], [0,2], [0,1]])
 puts !hay_ciclo?([[], [], []])
 puts !hay_ciclo?([[1,2,3], [4], [], [], []])
 puts !hay_ciclo?([[1], [0,2,3], [1], [1]])
+
+# Complejidad: O(|V| + |E|). Se asegura que cada vértice y cada arista
+# se recorre una sola vez, ya que el algoritmo está basado en el
+# recorrido DFS.
