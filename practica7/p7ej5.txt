@@ -1,0 +1,20 @@
+Ejercicio 5
+===========
+
+Algoritmo de Prim:
+------------------
+
+Arrancamos con un grafo vacío A que va a ser el resultado.
+
+Numeramos los nodos: de izquierda a derecha, y de arriba a abajo, del 0 al 7.
+
+marcados: 0
+agrego 0-1, con peso 3
+marcados: 0, 1
+agrego 1-2, con peso 2
+marcados: 0, 1, 2
+agrego 1-6, con peso 2
+marcados: 0, 1, 2, 6
+agrego 6-5, con peso 1
+marcados: 0, 1, 2, 6, 5
+agrego 0-4
