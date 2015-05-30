@@ -4,8 +4,6 @@ Ejercicio 5
 Algoritmo de Prim:
 ------------------
 
-Arrancamos con un grafo vacío A que va a ser el resultado.
-
 Numeramos los nodos: de izquierda a derecha, y de arriba a abajo, del 0 al 7.
 
 marcados: 0
@@ -17,4 +15,33 @@ agrego 1-6, con peso 2
 marcados: 0, 1, 2, 6
 agrego 6-5, con peso 1
 marcados: 0, 1, 2, 6, 5
-agrego 0-4
+agrego 0-4, con peso 3
+marcados: 0, 1, 2, 6, 5, 4
+agrego 2-3, con peso 4
+marcados: 0, 1, 2, 6, 5, 4, 2
+agrego 5-7, con peso 6
+marcados: 0, 1, 2, 6, 5, 4, 2, 7
+
+FIN
+
+Algoritmo de Kruskal
+--------------------
+
+Numeramos los nodos: de izquierda a derecha, y de arriba a abajo, del 0 al 7.
+
+agrego 5-6, con peso 1
+marcados: 5, 6
+agrego 6-1, con peso 2
+marcados: 5, 6, 1
+agrego 1-2, con peso 2
+marcados: 5, 6, 1, 2
+agrego 1-0, con peso 3
+marcados: 5, 6, 1, 2, 0
+agrego 1-4, con peso 3
+marcados: 5, 6, 1, 2, 0, 4
+agrego 2-3, con peso 4
+marcados: 5, 6, 1, 2, 0, 4, 3
+agrego 3-7, con peso 6
+marcados: 5, 6, 1, 2, 0, 4, 3, 7
+
+FIN
