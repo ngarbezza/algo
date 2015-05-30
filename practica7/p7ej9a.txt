@@ -1,0 +1,133 @@
+Ejercicio 9a
+============
+
+Se realizan 5 pasadas (|V| - 1)
+
+Paso 0: Inicialización
+----------------------
+
+Distancias:
+I:   0
+II:  infinito
+III: infinito
+IV:  infinito
+V:   infinito
+VI:  infinito
+
+Predecesores:
+I:   null
+II:  null
+III: null
+IV:  null
+V:   null
+VI:  null
+
+Las aristas se procesan en este orden:
+1.  I   -> II  (-1)
+2.  I   -> IV  (2)
+3.  I   -> VI  (6)
+4.  II  -> I   (2)
+5.  II  -> III (3)
+6.  III -> II  (4)
+7.  III -> VI  (-2)
+8.  IV  -> II  (1)
+9.  IV  -> V   (3)
+10. V   -> VI  (1)
+11. V   -> VI  (2)
+12. V   -> IV  (2)
+13. VI  -> III (3)
+14. VI  -> V   (1)
+
+Paso 1
+------
+
+1.  I   -> II    mejora distancia a II
+2.  I   -> IV    mejora distancia a IV
+3.  I   -> VI    mejora distancia a VI
+4.  II  -> I     no mejora nada
+5.  II  -> III   mejora distancia a III
+6.  III -> II    no mejora nada
+7.  III -> VI    mejora distancia a VI
+8.  IV  -> II    no mejora nada
+9.  IV  -> V     mejora distancia a V
+10. V   -> VI    no mejora nada
+11. V   -> VI    no mejora nada
+12. V   -> IV    no mejora nada
+13. VI  -> III   no mejora nada
+14. VI  -> V     mejora distancia a V
+
+Resultado parcial:
+
+Distancias:
+I:   0
+II:  -1
+III: 2
+IV:  2
+V:   1
+VI:  0
+
+Predecesores:
+I:   null
+II:  I
+III: II
+IV:  I
+V:   VI
+VI:  III
+
+Paso 2
+------
+
+1.  I   -> II    no mejora nada
+2.  I   -> IV    no mejora nada
+3.  I   -> VI    no mejora nada
+4.  II  -> I     no mejora nada
+5.  II  -> III   no mejora nada
+6.  III -> II    no mejora nada
+7.  III -> VI    no mejora nada
+8.  IV  -> II    no mejora nada
+9.  IV  -> V     no mejora nada
+10. V   -> VI    no mejora nada
+11. V   -> VI    no mejora nada
+12. V   -> IV    no mejora nada
+13. VI  -> III   no mejora nada
+14. VI  -> V     no mejora nada
+
+Resultado parcial:
+
+Distancias:
+I:   0
+II:  -1
+III: 2
+IV:  2
+V:   1
+VI:  0
+
+Predecesores:
+I:   null
+II:  I
+III: II
+IV:  I
+V:   VI
+VI:  III
+
+Pasos 3, 4, 5
+-------------
+
+Debido a que ningún camino mínimo se pudo mejorar en el paso 2, tampoco
+habrá cambios en estos pasos, con lo cual el resultado final es:
+
+Distancias:
+I:   0
+II:  -1
+III: 2
+IV:  2
+V:   1
+VI:  0
+
+Predecesores:
+I:   null
+II:  I
+III: II
+IV:  I
+V:   VI
+VI:  III

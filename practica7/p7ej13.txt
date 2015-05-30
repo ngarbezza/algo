@@ -1,0 +1,34 @@
+Ejercicio 13
+============
+
+Primer punto a considerar: como el problema de la mochila es un problema de
+maximización (de ganancia) y el camino mínimo, como su nombre lo indica,
+apunta a la minimización, vamos a expresar las ganancias con su valor negativo.
+
+Lo vamos a modelar como un grafo dirigido donde:
+* Los vértices indican el peso acumulado de la mochila
+* Las aristas representan el agregado de un elemento con una determinada
+  ganancia
+
+Tendremos tantos vértices como combinaciones de pesos posibles desde 0 hasta el
+peso máximo de la mochila (que viene por definición del problema).
+
+Ejemplo: si del vértice 5 hay una arista que me conecta con el vértice 20,
+y el valor asociado a esa arista es -8, entonces esto significa que por este
+camino estaría agregando a la mochila un elemento que pesa 15, y que me otorga
+8 de ganancia.
+
+Entonces, resolver el problema de la mochila se reduce a encontrar el camino
+mínimo desde el vértice 0, hasta el vértice con peso máximo de la mochila.
+
+Lo único difícil de este modelado es determinar qué elementos exactamente
+fueron agregados a la mochila. Habría que recorrer por el camino de los
+predecesores y determinar el peso sumado en cada paso (eso nos determina
+el peso de cada elemento que agregamos). Si hay elementos del mismo peso,
+tendría que observar además las distancias en cada paso, que me van a
+determinar la ganancia del elemento que puse. Si hay elementos de igual peso
+e igual ganancia, no podría determinar cuál fue exactamente el que agregué.
+Se podría solucionar agregando más información a los vértices, pero eso
+implica otro tipo de modelado (como por ejemplo, un vértice denota un
+peso acumulado junto con la lista de elementos que se agregaron para llegar
+a ese peso)

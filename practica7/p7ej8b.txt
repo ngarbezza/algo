@@ -1,0 +1,12 @@
+Ejercicio 8b
+============
+
+Dado que Dijkstra está planteado para partir de un vértice y hallar los caminos
+mínimos a todos los demás vértices, no existe una mejor opción que correr
+Dijkstra para todos los vértices, es decir, en términos de complejidad
+algorítmica:
+
+O(V . <complejidad de la versión "original" de Dijkstra>)
+
+donde <complejidad de la versión "original" de Dijkstra> puede ser (E . log(V))
+si se implementa con una cola de prioridad.

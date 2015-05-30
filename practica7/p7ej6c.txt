@@ -1,0 +1,13 @@
+Ejercicio 6c
+============
+
+El algoritmo de Dijkstra trabaja sobre una asunción fuerte: una vez elegida
+una arista como parte de un camino mínimo, no se vuelve a chequear si ese
+camino puede ser "mejorable", porque justamente si era mejorable, hubiese
+elegido esa opción en un primer momento. Entonces, si agregamos una arista
+o cambiamos el peso de una arista existente, estaríamos rompiendo esa asunción,
+pudiendo causar cambios en los caminos mínimos que involucran a un conjunto de
+vértices, que potencialmente podrían ser todos los del grafo. Y sería más
+costoso calcular todos aquellos vértices "invalidados" por el cambio (ya que
+habría que buscarlos en el arreglo de predecesores "hacia atrás"), que conviene
+correr Dijkstra de nuevo.

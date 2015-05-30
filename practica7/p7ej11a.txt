@@ -1,0 +1,8 @@
+Ejercicio 11a
+-------------
+
+Tanto en Floyd como en Dantzig no influye demasiado la forma en que se numeren
+los vértices, a menos que querramos agregar la detección de ciclos negativos
+a dichos algoritmos. En ese caso, cuanto más antes se encuentre el ciclo, mejor
+(desde el punto de vista del costo), en ese caso numerar a los potenciales
+nodos "conflictivos" primero sería mejor.
