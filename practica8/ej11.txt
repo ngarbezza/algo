@@ -1,0 +1,25 @@
+Ejercicio 11
+============
+
+TSP_backtracking(ciudadesPorVisitar, ciudadesVisitadas, distanciaRecorrida) {
+  si ciudadesPorVisitar es vacía {
+    retornar (ciudadesVisitadas, distanciaRecorrida)
+  } si no {
+    mejorDistancia = infinito
+    mejorRecorrido = []
+
+    para cada ciudad en ciudadesPorVisitar {
+      (ciudadesVisitadasEnEstePaso, distanciaRecorridaEnEstePaso) =
+        TSP_backtracking(
+          ciudadesPorVisitar - [ciudad],
+          ciudadesVisitadas + [ciudad]
+          distanciaRecorrida + costoEnLlegarA(ciudad, ciudadesVisitadas)))
+      si distanciaRecorridaEnEstePaso < mejorDistancia {
+        mejorDistancia = distanciaRecorridaEnEstePaso
+        mejorRecorrido = ciudadesVisitadasEnEstePaso
+      }
+    }
+
+    retornar (mejorRecorrido, mejorDistancia)
+  }
+}
