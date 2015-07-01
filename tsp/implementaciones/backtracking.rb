@@ -1,9 +1,20 @@
+require_relative 'aux'
+
+# Interfaz pública
+
+def backtracking(cantidad_de_ciudades, ciudad_inicial, distancias)
+  ciudades_por_visitar = (0..cantidad_de_ciudades-1).to_a - [ciudad_inicial]
+  tsp_backtracking ciudades_por_visitar, [ciudad_inicial], 0, distancias
+end
+
+# Algoritmo principal
+
 def tsp_backtracking(ciudades_por_visitar, ciudades_visitadas, distancia_recorrida, distancias)
   if ciudades_por_visitar.empty?
     mejor_recorrido = ciudades_visitadas
     mejor_distancia = distancia_recorrida
   else
-    mejor_recorrido = []
+    mejor_recorrido = ciudades_visitadas
     mejor_distancia = Float::INFINITY
 
     ciudades_por_visitar.each do |ciudad|
@@ -19,15 +30,10 @@ def tsp_backtracking(ciudades_por_visitar, ciudades_visitadas, distancia_recorri
       end
     end
 
-    if mejor_recorrido.last != mejor_recorrido.first
+    if debe_terminar_recorrido?(mejor_recorrido)
       mejor_distancia += costo_en_llegar_a(mejor_recorrido.first, mejor_recorrido.last, distancias)
-      mejor_recorrido += [mejor_recorrido.first]
+      mejor_recorrido << mejor_recorrido.first
     end
   end
   [mejor_recorrido, mejor_distancia]
-end
-
-def costo_en_llegar_a(una_ciudad, ciudad_anterior, distancias)
-  return 0 if ciudad_anterior.nil?
-  distancias[una_ciudad][ciudad_anterior]
 end
