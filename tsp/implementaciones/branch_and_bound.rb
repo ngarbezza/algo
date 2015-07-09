@@ -17,7 +17,7 @@ def cota_inferior(cantidad_de_ciudades, distancias, restricciones)
     segundo_eje_elegido_por_ser_minimo = true
 
     (0..cantidad_de_ciudades-1).each do |j|
-      if tiene_que_estar?(i, j, restricciones)
+      if restricciones.tiene_que_estar?(i, j)
         if primer_eje_elegido_por_ser_minimo
           segundo_eje_elegido = primer_eje_elegido # lo muevo de lugar para que entre el que tiene que estar sí o sí
           primer_eje_elegido = costo_en_llegar_a(i, j, distancias)
@@ -30,7 +30,7 @@ def cota_inferior(cantidad_de_ciudades, distancias, restricciones)
         end
       elsif i == j
         # nada que hacer
-      elsif no_tiene_que_estar?(i, j, restricciones)
+      elsif restricciones.no_tiene_que_estar?(i, j)
         # nada que hacer
       elsif !primer_eje_elegido_por_ser_minimo && !segundo_eje_elegido_por_ser_minimo
         # nada que hacer
@@ -49,16 +49,6 @@ def cota_inferior(cantidad_de_ciudades, distancias, restricciones)
     total += segundo_eje_elegido
   end
   total.fdiv(2)
-end
-
-# TODO: mover a una matriz de restricciones
-
-def tiene_que_estar?(desde, hasta, restricciones)
-  restricciones[:ejes_que_tienen_que_estar].any? { |r| r == [desde, hasta] || r == [hasta, desde] }
-end
-
-def no_tiene_que_estar?(desde, hasta, restricciones)
-  restricciones[:ejes_que_no_tienen_que_estar].any? { |r| r == [desde, hasta] || r == [hasta, desde] }
 end
 
 ### COTA SUPERIOR
@@ -96,18 +86,6 @@ def branchear(nodo, nodos, cantidad_de_ciudades)
   }
   nodos << branch_izquierdo
   nodos << branch_derecho
-end
-
-def buscar_nueva_restriccion_para_branchear(restricciones)
-  # precondición: asume que las restricciones del nodo satisfacen el invariante
-  cantidad_de_ciudades = restricciones.length
-  (0..cantidad_de_ciudades-1).each do |i|
-    (0..cantidad_de_ciudades-1).each do |j|
-      return [i, j] if restricciones[i][j] == 0
-    end
-  end
-
-  raise 'ya existen todas las restricciones posibles'
 end
 
 def con_restricciones_inferidas_al_incluir(una_restriccion, restricciones)
@@ -178,4 +156,51 @@ def nodo_inicial(cantidad_de_ciudades, distancias)
    restricciones: [],
    cota_inferior: cota_inferior(cantidad_de_ciudades, distancias, []),
    cota_superior: cota_superior(cantidad_de_ciudades, distancias, [])}
+end
+
+class RestriccionesTSP
+
+  def initialize(cantidad_de_ciudades)
+    @cantidad_de_ciudades = cantidad_de_ciudades
+    inicializar_matriz_de_restricciones
+  end
+
+  def inicializar_matriz_de_restricciones
+    @restricciones = []
+    (0..@cantidad_de_ciudades-1).each do |i|
+      @restricciones << [nil] * @cantidad_de_ciudades
+      (0..@cantidad_de_ciudades-1).each do |j|
+        @restricciones[i][j] = i != j ? 0 : -1
+      end
+    end
+  end
+
+  def tiene_que_estar?(desde, hasta)
+    @restricciones[desde][hasta] == 1 && @restricciones[hasta][desde] == 1
+  end
+
+  def no_tiene_que_estar?(desde, hasta)
+    @restricciones[desde][hasta] == -1 && @restricciones[hasta][desde] == -1
+  end
+
+  def incluir(desde, hasta)
+    @restricciones[desde][hasta] = 1
+    @restricciones[hasta][desde] = 1
+  end
+
+  def excluir(desde, hasta)
+    @restricciones[desde][hasta] = -1
+    @restricciones[hasta][desde] = -1
+  end
+
+  def posible_proxima_restriccion
+    (0..@cantidad_de_ciudades-1).each do |i|
+      (0..@cantidad_de_ciudades-1).each do |j|
+        return [i, j] if @restricciones[i][j] == 0
+      end
+    end
+
+    raise 'ya existen todas las restricciones posibles'
+  end
+
 end

@@ -53,36 +53,49 @@ describe 'TSP' do
     describe 'cálculo de cota inferior' do
 
       it 'sin ninguna restricción' do
-        restricciones = {ejes_que_tienen_que_estar: [], ejes_que_no_tienen_que_estar: []}
+        restricciones = RestriccionesTSP.new(5)
+
         resultado = cota_inferior(5, matriz_de_distancias(5), restricciones)
 
         expect(resultado).to eq(17.5) # ((3 + 2) + (3 + 3) + (4 + 4) + (2 + 5) + (3 + 6)).fdiv(2)
       end
 
       it 'con la restricción de que un eje debe estar' do
-        restricciones = {ejes_que_tienen_que_estar: [[0, 4]], ejes_que_no_tienen_que_estar: []}
+        restricciones = RestriccionesTSP.new(5)
+        restricciones.incluir(0, 4)
+
         resultado = cota_inferior(5, matriz_de_distancias(5), restricciones)
 
         expect(resultado).to eq(20) # ((2 + 7) + (3 + 3) + (4 + 4) + (2 + 5) + (3 + 7)).fdiv(2)
       end
 
       it 'con la restricción de que un eje NO debe estar' do
-        restricciones = {ejes_que_tienen_que_estar: [], ejes_que_no_tienen_que_estar: [[0, 1]]}
+        restricciones = RestriccionesTSP.new(5)
+        restricciones.excluir(0, 1)
+
         resultado = cota_inferior(5, matriz_de_distancias(5), restricciones)
 
         expect(resultado).to eq(18.5) # ((2 + 4) + (3 + 4) + (4 + 4) + (2 + 5) + (3 + 6)).fdiv(2)
       end
 
       it 'con más de una restricción' do
-        restricciones = {ejes_que_tienen_que_estar: [[0, 2], [0, 4]], ejes_que_no_tienen_que_estar: [[0, 1], [0, 3]]}
+        restricciones = RestriccionesTSP.new(5)
+        restricciones.incluir(0, 2)
+        restricciones.incluir(0, 4)
+        restricciones.excluir(0, 1)
+        restricciones.excluir(0, 3)
         resultado = cota_inferior(5, matriz_de_distancias(5), restricciones)
 
         expect(resultado).to eq(23.5) # ((4 + 7) + (3 + 4) + (4 + 4) + (5 + 6) + (3 + 7)).fdiv(2)
       end
 
       it 'con todas las restricciones que conforman un tour' do
-        restricciones = {ejes_que_tienen_que_estar: [[0, 1], [0, 3], [2, 3], [2, 4], [1, 4]],
-                         ejes_que_no_tienen_que_estar: [[0, 2], [0, 4], [1, 2], [1, 3], [3, 4]]}
+        restricciones = RestriccionesTSP.new(5)
+        restricciones.incluir(0, 1)
+        restricciones.incluir(1, 4)
+        restricciones.incluir(4, 2)
+        restricciones.incluir(2, 3)
+        restricciones.incluir(3, 0)
         resultado = cota_inferior(5, matriz_de_distancias(5), restricciones)
 
         expect(resultado).to eq(21) # ejes que conforman tour 0 -> 1 -> 4 -> 2 -> 3 -> 0 (21)
@@ -139,37 +152,31 @@ describe 'TSP' do
     describe 'búsqueda de una nueva restricción para branchear' do
 
       it 'retorna la opción 0,1 si no hay restricciones' do
-        restricciones = [
-            [-1,  0],
-            [0 , -1]
-        ]
+        restricciones = RestriccionesTSP.new(2)
 
-        resultado = buscar_nueva_restriccion_para_branchear(restricciones)
-        expect(resultado).to eq([0,1])
+        expect(restricciones.posible_proxima_restriccion).to eq([0,1])
       end
 
       it 'retorna la primer opción disponible (1,2)' do
-        restricciones = [
-            [-1,  1,  1, -1, -1],
-            [ 1, -1,  0,  0,  0],
-            [ 1,  0, -1,  0,  0],
-            [-1,  0,  0, -1,  0],
-            [-1,  0,  0,  0, -1]
-        ]
+        restricciones = RestriccionesTSP.new(5)
+        restricciones.incluir(0,1)
+        restricciones.incluir(0,2)
+        restricciones.excluir(0,3)
+        restricciones.excluir(0,4)
 
-        resultado = buscar_nueva_restriccion_para_branchear(restricciones)
-        expect(resultado).to eq([1,2])
+        expect(restricciones.posible_proxima_restriccion).to eq([1,2])
       end
 
       it 'lanza un error si ya existen todas las restricciones posibles (o sea, no se puede branchear más)' do
-        restricciones = [
-            [-1,  1,  1, -1],
-            [ 1, -1, -1,  1],
-            [ 1, -1, -1,  1],
-            [-1,  1,  1, -1],
-        ]
+        restricciones = RestriccionesTSP.new(4)
+        restricciones.incluir(0,1)
+        restricciones.incluir(0,2)
+        restricciones.excluir(0,3)
+        restricciones.excluir(1,2)
+        restricciones.excluir(1,3)
+        restricciones.incluir(2,3)
 
-        expect {buscar_nueva_restriccion_para_branchear(restricciones)}.to raise_error
+        expect {restricciones.posible_proxima_restriccion}.to raise_error
       end
 
     end
