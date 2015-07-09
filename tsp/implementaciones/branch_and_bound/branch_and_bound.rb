@@ -5,7 +5,7 @@ class BranchAndBoundTSP
 
   def initialize(cantidad_de_ciudades, distancias)
     @cantidad_de_ciudades = cantidad_de_ciudades
-    @ciudades = (0..@cantidad_de_ciudades-1)
+    @ciudades = 0..@cantidad_de_ciudades-1
     @distancias = distancias
   end
 
@@ -58,25 +58,29 @@ class BranchAndBoundTSP
 
   def cota_superior(restricciones)
     # TODO: considerar restricciones
-    Float::INFINITY
+    [[], Float::INFINITY]
     # greedy(cantidad_de_ciudades, 0, distancias)[1]
   end
 
   ### BRANCH AND BOUND
 
-  def branch_and_bound(distancias)
-    nodos = []
-    nodos << nodo_inicial
-    nodo_actual = proximo_nodo_a_procesar(nodos)
+  def resolver
+    @nodos = []
+    @nodos_procesados = []
+    @nodos << nodo_inicial
+    nodo_actual = proximo_nodo_a_procesar
     calcular_cotas_para(nodo_actual)
-    until encontre_solucion_optima?(nodo_actual)
-      nodos += ramificar(nodo_actual)
-      nodo_actual = proximo_nodo_a_procesar(nodos)
+    until encontre_solucion_optima?
+      if !nodo_actual[:restricciones].hay_tour_completo?
+        @nodos = ramificar(nodo_actual) + @nodos
+      end
+      @nodos.delete(nodo_actual)
+      @nodos_procesados << nodo_actual
+      nodo_actual = proximo_nodo_a_procesar
       calcular_cotas_para(nodo_actual)
-      # avisar a ancestros
-      # podar si se puede
+      intentar_podar
     end
-    nodo_actual[:cota_superior]
+    @solucion
   end
 
   def ramificar(nodo)
@@ -96,12 +100,12 @@ class BranchAndBoundTSP
     [rama_izquierda, rama_derecha]
   end
 
-  def proximo_nodo_a_procesar(nodos)
-    nodos.first
+  def proximo_nodo_a_procesar
+    @nodos.first
   end
 
-  def encontre_solucion_optima?(nodo)
-    nodo[:cota_superior] == nodo[:cota_inferior]
+  def encontre_solucion_optima?
+    @mejor_cota_inferior == @mejor_cota_superior
   end
 
   def nodo_inicial
@@ -111,6 +115,39 @@ class BranchAndBoundTSP
   def calcular_cotas_para(nodo_actual)
     nodo_actual[:cota_inferior] = cota_inferior(nodo_actual[:restricciones])
     nodo_actual[:cota_superior] = cota_superior(nodo_actual[:restricciones])
+
+    propagar_informacion_de_cotas(nodo_actual)
+  end
+
+  def propagar_informacion_de_cotas(nodo)
+    if !@mejor_cota_superior || (nodo[:cota_superior][1] < @mejor_cota_superior)
+      @mejor_cota_superior = nodo[:cota_superior][1]
+      @solucion = nodo[:cota_superior]
+    end
+    if !@mejor_cota_inferior || (nodo[:cota_inferior] > @mejor_cota_inferior)
+      @mejor_cota_inferior = nodo[:cota_inferior]
+      if nodo[:restricciones].hay_tour_completo?
+        @mejor_cota_inferior_es_de_tour_completo = true
+        @solucion = [nodo[:restricciones].tour_completo, @mejor_cota_inferior]
+
+        # TODO: borrar cuando la cota superior se calcule correctamente, esto hace que NO de una solución óptima
+        @mejor_cota_superior = @mejor_cota_inferior
+      end
+    end
+  end
+
+  def intentar_podar
+    @nodos.each do |nodo|
+      if puede_ser_podado?(nodo)
+        @nodos.delete_if { |n| n[:padre] == nodo }
+        @nodos.delete(nodo)
+      end
+    end
+  end
+
+  def puede_ser_podado?(nodo)
+    return false if nodo[:cota_inferior].nil?
+    nodo[:cota_inferior] > @mejor_cota_superior || (@mejor_cota_inferior_es_de_tour_completo && @mejor_cota_inferior < nodo[:cota_inferior])
   end
 
 end

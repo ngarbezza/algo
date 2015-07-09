@@ -296,6 +296,30 @@ describe 'TSP' do
 
     end
 
+    describe 'tour completo' do
+
+      it 'no hay tour completo si no hay suficientes restricciones para determinarlo' do
+        restricciones.incluir(0, 2)
+        restricciones.incluir(0, 4)
+        restricciones.excluir(0, 1)
+        restricciones.excluir(0, 3)
+
+        expect(restricciones.hay_tour_completo?).to eq(false)
+      end
+
+      it 'hay tour completo si hay suficientes restricciones para determinarlo' do
+        restricciones.incluir(0, 1)
+        restricciones.incluir(1, 4)
+        restricciones.incluir(4, 2)
+        restricciones.incluir(2, 3)
+        restricciones.incluir(3, 0)
+
+        expect(restricciones.hay_tour_completo?).to eq(true)
+        expect(restricciones.tour_completo).to eq([0, 1, 4, 2, 3, 0])
+      end
+
+    end
+
   end
 
 end

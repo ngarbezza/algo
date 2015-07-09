@@ -47,6 +47,35 @@ class RestriccionesTSP
     raise 'ya existen todas las restricciones posibles'
   end
 
+  def hay_tour_completo?
+    @ciudades.all? { |ciudad| @restricciones[ciudad].count(1) == 2 }
+  end
+
+  def no_hay_tour_completo?
+    @ciudades.any? { |ciudad| @restricciones[ciudad].count(1) != 2 }
+  end
+
+  def tour_completo
+    # TODO mejorar, está un poco feo
+    restricciones_temp = @restricciones.map(&:dup)
+    ciudad_inicial = 0
+    tour = [ciudad_inicial]
+    ciudad_actual = ciudad_inicial
+    while tour.length < @cantidad_de_ciudades
+      restricciones_temp[ciudad_actual].each_with_index do |e, i|
+        if e == 1
+          tour << i
+          restricciones_temp[ciudad_actual][i] = -1
+          restricciones_temp[i][ciudad_actual] = -1
+          ciudad_actual = i
+          break
+        end
+      end
+    end
+    tour << ciudad_inicial
+    tour
+  end
+
   def clone
     self.class.new @cantidad_de_ciudades,
                    @cantidad_de_inclusiones,
@@ -93,7 +122,7 @@ class RestriccionesTSP
         if @restricciones[i][j] == 0
           @restricciones[i][j] = 1
           @restricciones[j][i] = 1
-          if hay_ciclo_que_no_forma_tour?
+          if hay_ciclo?(@restricciones) && no_hay_tour_completo?
             @restricciones[i][j] = -1
             @restricciones[j][i] = -1
             @cantidad_de_exclusiones += 1
@@ -118,10 +147,6 @@ class RestriccionesTSP
         end
       end
     end
-  end
-
-  def hay_ciclo_que_no_forma_tour?
-    hay_ciclo?(@restricciones) && @ciudades.any? { |c| @restricciones[c].count(1) != 2 }
   end
 
 end
