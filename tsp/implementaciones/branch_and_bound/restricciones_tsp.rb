@@ -31,10 +31,12 @@ class RestriccionesTSP
   def excluir(desde, hasta)
     @restricciones[desde][hasta] = -1
     @restricciones[hasta][desde] = -1
+    realizar_inferencias_de_exclusion
     @cantidad_de_exclusiones += 1
   end
 
   def posible_proxima_restriccion
+    # TODO chequear si funciona en todos los casos
     (0..@cantidad_de_ciudades-1).each do |i|
       (0..@cantidad_de_ciudades-1).each do |j|
         return [i, j] if @restricciones[i][j] == 0
@@ -62,10 +64,14 @@ class RestriccionesTSP
     incluir_ejes_que_deben_estar_si_o_si_en_el_tour
   end
 
+  def realizar_inferencias_de_exclusion
+    incluir_ejes_que_deben_estar_si_o_si_en_el_tour
+  end
+
   def incluir_ejes_que_deben_estar_si_o_si_en_el_tour
     (0..@cantidad_de_ciudades-1).each do |i|
       ceros = @restricciones[i].count(0)
-      unos = @restricciones[i].count(0)
+      unos = @restricciones[i].count(1)
       if (ceros == 2 && unos == 0) || (ceros == 1 && unos == 1)
         (0..@cantidad_de_ciudades-1).each do |j|
           if @restricciones[i][j] == 0

@@ -157,14 +157,12 @@ describe 'TSP' do
         expect(restricciones.posible_proxima_restriccion).to eq([0, 1])
       end
 
-      it 'retorna la primer opción disponible (1,2)' do
+      it 'retorna la primer opción disponible (1,3) porque (1,2) no es factible' do
         restricciones = RestriccionesTSP.new(5)
         restricciones.incluir(0, 1)
         restricciones.incluir(0, 2)
-        restricciones.excluir(0, 3)
-        restricciones.excluir(0, 4)
 
-        expect(restricciones.posible_proxima_restriccion).to eq([1, 2])
+        expect(restricciones.posible_proxima_restriccion).to eq([1, 3])
       end
 
       it 'lanza un error si ya existen todas las restricciones posibles (o sea, no se puede branchear más)' do
@@ -205,7 +203,7 @@ describe 'TSP' do
           expect(restricciones.cantidad_de_exclusiones).to eq(0)
         end
 
-        it 'infiere restricciones nuevas (para que pueda formarse un tour y/o para que no haya ciclos prematuros y/o para completar el tour cuando no hay otros ejes posibles para elegir) si la restricción a agregar hace que haya 2 ejes adyacentes en algún vértice' do
+        it 'infiere restricciones nuevas (para que pueda formarse un tour y/o para que no haya ciclos prematuros y/o para completar el tour cuando no hay otros ejes posibles para elegir)' do
           restricciones = RestriccionesTSP.new(4)
           restricciones.incluir(0, 1)
           restricciones.incluir(0, 2)
@@ -222,7 +220,42 @@ describe 'TSP' do
 
       end
 
-      describe 'al excluir un eje'
+      describe 'al excluir un eje' do
+
+        it 'no infiere nada más (agrega sólo la restricción nueva) si el conjunto inicial de restricciones es vacío' do
+          restricciones = RestriccionesTSP.new(5)
+          restricciones.excluir(0, 1)
+
+          expect(restricciones.no_tiene_que_estar?(0, 1)).to eq(true)
+          expect(restricciones.cantidad_de_inclusiones).to eq(0)
+          expect(restricciones.cantidad_de_exclusiones).to eq(1)
+        end
+
+        it 'no infiere nada más (agrega sólo la restricción nueva) si la nueva restricción no tiene un efecto en las restricciones anteriores' do
+          restricciones = RestriccionesTSP.new(5)
+          restricciones.excluir(0, 1)
+          restricciones.excluir(2, 3)
+
+          expect(restricciones.no_tiene_que_estar?(0, 1)).to eq(true)
+          expect(restricciones.no_tiene_que_estar?(2, 3)).to eq(true)
+          expect(restricciones.cantidad_de_inclusiones).to eq(0)
+          expect(restricciones.cantidad_de_exclusiones).to eq(2)
+        end
+
+        it 'infiere restricciones nuevas (para que pueda formarse un tour y/o para que no haya ciclos prematuros y/o para completar el tour cuando no hay otros ejes posibles para elegir)' do
+          restricciones = RestriccionesTSP.new(4)
+          restricciones.excluir(0, 1)
+
+          expect(restricciones.no_tiene_que_estar?(0, 1)).to eq(true) # porque ya estaba esa regla
+          expect(restricciones.tiene_que_estar?(0, 2)).to eq(true)    # porque es uno de las 2 ejes posibles para conectar a 0
+          expect(restricciones.tiene_que_estar?(0, 3)).to eq(true)    # porque es uno de las 2 ejes posibles para conectar a 0
+          expect(restricciones.tiene_que_estar?(1, 2)).to eq(true)    # porque es uno de las 2 ejes posibles para conectar a 1
+          expect(restricciones.tiene_que_estar?(1, 3)).to eq(true)    # porque es uno de las 2 ejes posibles para conectar a 1
+          expect(restricciones.cantidad_de_inclusiones).to eq(0 + 4)
+          expect(restricciones.cantidad_de_exclusiones).to eq(1)
+        end
+
+      end
 
     end
 

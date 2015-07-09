@@ -1,12 +1,6 @@
 require_relative '../aux'
 require_relative 'restricciones_tsp'
 
-### Invariante de las restricciones
-# para X cantidad de ciudades
-#  * un eje i,j no puede estar en los dos tipos de restricciones al mismo tiempo
-#  * la ciudad i puede aparecer solo dos veces dentro de las restricciones de tipo 'tiene que estar'
-#  * si aparece dos veces, entonces tiene que aparecer X-2 veces en las restricciones de tipo 'no tiene que estar'
-
 ### COTA INFERIOR
 
 def cota_inferior(cantidad_de_ciudades, distancias, restricciones)
