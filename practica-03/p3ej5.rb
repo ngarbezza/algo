@@ -2,7 +2,7 @@ require_relative '../extensions/array'
 
 def prod_r(required_units, cost_per_unit, fixed_cost, stock_cost, prod_interval)
 
-  # caso base: el ultimo mes de produccion
+  # caso base: el ultimo mes de producción
   if required_units.size == 1
     return [cost_to_produce(required_units.first,
                            cost_per_unit.first,
