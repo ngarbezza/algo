@@ -1,0 +1,5 @@
+Ejercicio 1
+===========
+
+a)
+b) Elegir todos los polígonos que se forman sin aristas que los atraviesen

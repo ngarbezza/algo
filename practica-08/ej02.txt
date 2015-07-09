@@ -1,0 +1,6 @@
+Ejercicio 2
+===========
+
+a) Los vertices deben tener mismo grado de entrada y de salida.
+b) Los vertices deben tener grado par. Y el grafo debe ser conexo.
+c)

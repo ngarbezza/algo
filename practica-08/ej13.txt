@@ -1,0 +1,16 @@
+Ejercicio 13
+============
+
+a)
+
+b) Las búsquedas locales elegidas son:
+
+1) Intercambiar dos caminos, o sea, dos aristas del grafo. Por ejemplo, si c1 -> c2 y c3 -> c4, hago que c1 -> c4 y c2 -> c3.
+
+c) Uso la estrategia 1, la de intercambiar dos caminos.
+  1) Parto de la solución con la estrategia greedy del ejercicio 12.
+  2) Elijo dos caminos a intercambiar (que dejen al recorrido válido, es decir, con forma de ciclo como debe ser).
+  3) Veo si la solución es mejor y si lo es, actualizo la solución.
+  4) Además, guardo en cuánto mejoró ese intercambio. Ordeno los mejores inte
+  5) Repito 2) y 3) cambiando otros caminos que no sean los que ya cambié.
+  6) Repito pasos 2) al 5) volviendo a cambiar caminos que ya cambié, pero dejando aquellos

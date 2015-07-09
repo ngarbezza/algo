@@ -1,0 +1,4 @@
+Ejercicio 12
+============
+
+La heurística golosa elegida consiste en elegir en cada paso el camino con menor distancia.
