@@ -3,28 +3,30 @@ require_relative 'restricciones_tsp'
 
 class BranchAndBoundTSP
 
-  def initialize(cantidad_de_ciudades)
+  def initialize(cantidad_de_ciudades, distancias)
     @cantidad_de_ciudades = cantidad_de_ciudades
+    @ciudades = (0..@cantidad_de_ciudades-1)
+    @distancias = distancias
   end
 
   ### COTA INFERIOR
 
-  def cota_inferior(cantidad_de_ciudades, distancias, restricciones)
+  def cota_inferior(restricciones)
     total = 0
-    (0..cantidad_de_ciudades-1).each do |i|
+    @ciudades.each do |i|
       primer_eje_elegido = Float::INFINITY
       primer_eje_elegido_por_ser_minimo = true
       segundo_eje_elegido = Float::INFINITY
       segundo_eje_elegido_por_ser_minimo = true
 
-      (0..cantidad_de_ciudades-1).each do |j|
+      @ciudades.each do |j|
         if restricciones.tiene_que_estar?(i, j)
           if primer_eje_elegido_por_ser_minimo
             segundo_eje_elegido = primer_eje_elegido # lo muevo de lugar para que entre el que tiene que estar sí o sí
-            primer_eje_elegido = costo_en_llegar_a(i, j, distancias)
+            primer_eje_elegido = costo_en_llegar_a(i, j, @distancias)
             primer_eje_elegido_por_ser_minimo = false
           elsif segundo_eje_elegido_por_ser_minimo
-            segundo_eje_elegido = costo_en_llegar_a(i, j, distancias)
+            segundo_eje_elegido = costo_en_llegar_a(i, j, @distancias)
             segundo_eje_elegido_por_ser_minimo = false
           else
             raise 'error en las definiciones de restricciones del TSP: no puede haber más de 2 ejes incidentes a un mismo vértice'
@@ -36,7 +38,7 @@ class BranchAndBoundTSP
         elsif !primer_eje_elegido_por_ser_minimo && !segundo_eje_elegido_por_ser_minimo
           # nada que hacer
         else
-          current = costo_en_llegar_a(i, j, distancias)
+          current = costo_en_llegar_a(i, j, @distancias)
           if current < primer_eje_elegido && primer_eje_elegido_por_ser_minimo
             segundo_eje_elegido = primer_eje_elegido
             primer_eje_elegido = current
@@ -54,7 +56,7 @@ class BranchAndBoundTSP
 
   ### COTA SUPERIOR
 
-  def cota_superior(cantidad_de_ciudades, distancias, restricciones)
+  def cota_superior(restricciones)
     # TODO: considerar restricciones
     Float::INFINITY
     # greedy(cantidad_de_ciudades, 0, distancias)[1]
@@ -62,15 +64,15 @@ class BranchAndBoundTSP
 
   ### BRANCH AND BOUND
 
-  def branch_and_bound(cantidad_de_ciudades, ciudad_inicial, distancias)
+  def branch_and_bound(distancias)
     nodos = []
-    nodos << nodo_inicial(cantidad_de_ciudades)
+    nodos << nodo_inicial
     nodo_actual = proximo_nodo_a_procesar(nodos)
-    calcular_cotas_para(cantidad_de_ciudades, distancias, nodo_actual)
+    calcular_cotas_para(nodo_actual)
     until encontre_solucion_optima?(nodo_actual)
       nodos += ramificar(nodo_actual)
       nodo_actual = proximo_nodo_a_procesar(nodos)
-      calcular_cotas_para(cantidad_de_ciudades, distancias, nodo_actual)
+      calcular_cotas_para(nodo_actual)
       # avisar a ancestros
       # podar si se puede
     end
@@ -102,13 +104,13 @@ class BranchAndBoundTSP
     nodo[:cota_superior] == nodo[:cota_inferior]
   end
 
-  def nodo_inicial(cantidad_de_ciudades)
-    {padre: nil, restricciones: RestriccionesTSP.new(cantidad_de_ciudades)}
+  def nodo_inicial
+    {padre: nil, restricciones: RestriccionesTSP.new(@cantidad_de_ciudades)}
   end
 
-  def calcular_cotas_para(cantidad_de_ciudades, distancias, nodo_actual)
-    nodo_actual[:cota_inferior] = cota_inferior(cantidad_de_ciudades, distancias, nodo_actual[:restricciones])
-    nodo_actual[:cota_superior] = cota_superior(cantidad_de_ciudades, distancias, nodo_actual[:restricciones])
+  def calcular_cotas_para(nodo_actual)
+    nodo_actual[:cota_inferior] = cota_inferior(nodo_actual[:restricciones])
+    nodo_actual[:cota_superior] = cota_superior(nodo_actual[:restricciones])
   end
 
 end

@@ -50,58 +50,51 @@ describe 'TSP' do
 
   describe 'Branch and bound' do
 
+    let(:cantidad_de_ciudades) { 5 }
+    let(:branch_and_bound) { BranchAndBoundTSP.new cantidad_de_ciudades, matriz_de_distancias(5) }
+    let(:restricciones) { RestriccionesTSP.new cantidad_de_ciudades }
+
     describe 'cálculo de cota inferior' do
 
       it 'sin ninguna restricción' do
-        branch_and_bound = BranchAndBoundTSP.new(5)
-        restricciones = RestriccionesTSP.new(5)
-
-        resultado = branch_and_bound.cota_inferior(5, matriz_de_distancias(5), restricciones)
+        resultado = branch_and_bound.cota_inferior(restricciones)
 
         expect(resultado).to eq(17.5) # ((3 + 2) + (3 + 3) + (4 + 4) + (2 + 5) + (3 + 6)).fdiv(2)
       end
 
       it 'con la restricción de que un eje debe estar' do
-        branch_and_bound = BranchAndBoundTSP.new(5)
-        restricciones = RestriccionesTSP.new(5)
         restricciones.incluir(0, 4)
 
-        resultado = branch_and_bound.cota_inferior(5, matriz_de_distancias(5), restricciones)
+        resultado = branch_and_bound.cota_inferior(restricciones)
 
         expect(resultado).to eq(20) # ((2 + 7) + (3 + 3) + (4 + 4) + (2 + 5) + (3 + 7)).fdiv(2)
       end
 
       it 'con la restricción de que un eje NO debe estar' do
-        branch_and_bound = BranchAndBoundTSP.new(5)
-        restricciones = RestriccionesTSP.new(5)
         restricciones.excluir(0, 1)
 
-        resultado = branch_and_bound.cota_inferior(5, matriz_de_distancias(5), restricciones)
+        resultado = branch_and_bound.cota_inferior(restricciones)
 
         expect(resultado).to eq(18.5) # ((2 + 4) + (3 + 4) + (4 + 4) + (2 + 5) + (3 + 6)).fdiv(2)
       end
 
       it 'con más de una restricción' do
-        branch_and_bound = BranchAndBoundTSP.new(5)
-        restricciones = RestriccionesTSP.new(5)
         restricciones.incluir(0, 2)
         restricciones.incluir(0, 4)
         restricciones.excluir(0, 1)
         restricciones.excluir(0, 3)
-        resultado = branch_and_bound.cota_inferior(5, matriz_de_distancias(5), restricciones)
+        resultado = branch_and_bound.cota_inferior(restricciones)
 
         expect(resultado).to eq(23.5) # ((4 + 7) + (3 + 4) + (4 + 4) + (5 + 6) + (3 + 7)).fdiv(2)
       end
 
       it 'con todas las restricciones que conforman un tour' do
-        branch_and_bound = BranchAndBoundTSP.new(5)
-        restricciones = RestriccionesTSP.new(5)
         restricciones.incluir(0, 1)
         restricciones.incluir(1, 4)
         restricciones.incluir(4, 2)
         restricciones.incluir(2, 3)
         restricciones.incluir(3, 0)
-        resultado = branch_and_bound.cota_inferior(5, matriz_de_distancias(5), restricciones)
+        resultado = branch_and_bound.cota_inferior(restricciones)
 
         expect(resultado).to eq(21) # ejes que conforman tour 0 -> 1 -> 4 -> 2 -> 3 -> 0 (21)
       end
@@ -112,53 +105,55 @@ describe 'TSP' do
 
       it 'sin ninguna restricción' do
         pending
-        # asume que arranca desde el vértice 0
-        restricciones = {ejes_que_tienen_que_estar: [], ejes_que_no_tienen_que_estar: []}
-        resultado = cota_superior(5, matriz_de_distancias(5), restricciones)
+        resultado = branch_and_bound.cota_superior(restricciones)
 
-        expect(resultado).to eq(21)
+        expect(resultado).to eq(21) # depende de que heurística use
       end
 
       it 'con la restricción de que un eje debe estar' do
         pending
-        restricciones = {ejes_que_tienen_que_estar: [[0, 4]], ejes_que_no_tienen_que_estar: []}
-        resultado = cota_superior(5, matriz_de_distancias(5), restricciones)
+        restricciones.incluir(0, 4)
+        resultado = branch_and_bound.cota_superior(restricciones)
 
-        expect(resultado).to eq(20)
+        expect(resultado).to eq(20) # depende de que heurística use
       end
 
       it 'con la restricción de que un eje NO debe estar' do
         pending
-        restricciones = {ejes_que_tienen_que_estar: [], ejes_que_no_tienen_que_estar: [[0, 1]]}
-        resultado = cota_superior(5, matriz_de_distancias(5), restricciones)
+        restricciones.excluir(0, 1)
+        resultado = branch_and_bound.cota_superior(restricciones)
 
-        expect(resultado).to eq(18.5)
+        expect(resultado).to eq(18.5) # depende de que heurística use
       end
 
       it 'con más de una restricción' do
         pending
-        restricciones = {ejes_que_tienen_que_estar: [[0, 2], [0, 4]], ejes_que_no_tienen_que_estar: [[0, 1], [0, 3]]}
-        resultado = cota_superior(5, matriz_de_distancias(5), restricciones)
+        restricciones.incluir(0, 2)
+        restricciones.incluir(0, 4)
+        resultado = branch_and_bound.cota_superior(restricciones)
 
-        expect(resultado).to eq(23.5)
+        expect(resultado).to eq(23.5) # depende de que heurística use
       end
 
       it 'con todas las restricciones que conforman un tour' do
         pending
-        restricciones = {ejes_que_tienen_que_estar: [[0, 1], [0, 3], [2, 3], [2, 4], [1, 4]],
-                         ejes_que_no_tienen_que_estar: [[0, 2], [0, 4], [1, 2], [1, 3], [3, 4]]}
-        resultado = cota_superior(5, matriz_de_distancias(5), restricciones)
+        restricciones.incluir(0, 1)
+        restricciones.incluir(1, 4)
+        restricciones.incluir(4, 2)
+        restricciones.incluir(2, 3)
+        restricciones.incluir(3, 0)
+        resultado = branch_and_bound.cota_superior(restricciones)
 
-        expect(resultado).to eq(21)
+        expect(resultado).to eq(21) # la única solución para ese tour
       end
 
     end
 
     describe 'búsqueda de una nueva restricción para branchear' do
 
-      it 'retorna la opción 0,1 si no hay restricciones' do
-        restricciones = RestriccionesTSP.new(2)
+      let(:cantidad_de_ciudades) { 4 }
 
+      it 'retorna la opción 0,1 si no hay restricciones' do
         expect(restricciones.posible_proxima_restriccion).to eq([0, 1])
       end
 
@@ -171,7 +166,6 @@ describe 'TSP' do
       end
 
       it 'lanza un error si ya existen todas las restricciones posibles (o sea, no se puede branchear más)' do
-        restricciones = RestriccionesTSP.new(4)
         restricciones.incluir(0, 1)
         restricciones.incluir(0, 2)
         restricciones.excluir(0, 3)
@@ -188,8 +182,9 @@ describe 'TSP' do
 
       describe 'al incluir un eje' do
 
+        let(:cantidad_de_ciudades) { 4 }
+
         it 'no infiere nada más (agrega sólo la restricción nueva) si el conjunto inicial de restricciones es vacío' do
-          restricciones = RestriccionesTSP.new(4)
           restricciones.incluir(0, 1)
 
           expect(restricciones.tiene_que_estar?(0, 1)).to eq(true)
@@ -198,7 +193,6 @@ describe 'TSP' do
         end
 
         it 'no infiere nada más (agrega sólo la restricción nueva) si la nueva restricción no tiene un efecto en las restricciones anteriores' do
-          restricciones = RestriccionesTSP.new(4)
           restricciones.incluir(0, 1)
           restricciones.incluir(2, 3)
 
@@ -209,7 +203,6 @@ describe 'TSP' do
         end
 
         it 'infiere restricciones nuevas (para que pueda formarse un tour y/o para que no haya ciclos prematuros y/o para completar el tour cuando no hay otros ejes posibles para elegir)' do
-          restricciones = RestriccionesTSP.new(4)
           restricciones.incluir(0, 1)
           restricciones.incluir(0, 2)
 
@@ -228,7 +221,6 @@ describe 'TSP' do
       describe 'al excluir un eje' do
 
         it 'no infiere nada más (agrega sólo la restricción nueva) si el conjunto inicial de restricciones es vacío' do
-          restricciones = RestriccionesTSP.new(5)
           restricciones.excluir(0, 1)
 
           expect(restricciones.no_tiene_que_estar?(0, 1)).to eq(true)
@@ -237,7 +229,6 @@ describe 'TSP' do
         end
 
         it 'no infiere nada más (agrega sólo la restricción nueva) si la nueva restricción no tiene un efecto en las restricciones anteriores' do
-          restricciones = RestriccionesTSP.new(5)
           restricciones.excluir(0, 1)
           restricciones.excluir(2, 3)
 
@@ -256,8 +247,9 @@ describe 'TSP' do
           expect(restricciones.tiene_que_estar?(0, 3)).to eq(true)    # porque es uno de las 2 ejes posibles para conectar a 0
           expect(restricciones.tiene_que_estar?(1, 2)).to eq(true)    # porque es uno de las 2 ejes posibles para conectar a 1
           expect(restricciones.tiene_que_estar?(1, 3)).to eq(true)    # porque es uno de las 2 ejes posibles para conectar a 1
+          expect(restricciones.no_tiene_que_estar?(2, 3)).to eq(true) # porque genera ciclo prematuro
           expect(restricciones.cantidad_de_inclusiones).to eq(0 + 4)
-          expect(restricciones.cantidad_de_exclusiones).to eq(1)
+          expect(restricciones.cantidad_de_exclusiones).to eq(2)
         end
 
       end
@@ -267,8 +259,7 @@ describe 'TSP' do
     describe 'ramificación' do
 
       it 'en un nodo sin restricciones, crea dos ramas con la primer inclusión/exclusión posible, y las asocia con el nodo padre' do
-        branch_and_bound = BranchAndBoundTSP.new(5)
-        nodo_inicial = branch_and_bound.nodo_inicial(5)
+        nodo_inicial = branch_and_bound.nodo_inicial
         ramas = branch_and_bound.ramificar(nodo_inicial)
 
         rama_izquierda = ramas[0]
@@ -281,7 +272,27 @@ describe 'TSP' do
         expect(rama_derecha[:restricciones].cantidad_de_exclusiones).to eq(1)
       end
 
-      it 'en un nodo con algunas restricciones, crea dos ramas eligiendo una opción de inclusión/exclusión de las posibles, y las asocia con el nodo padre'
+      it 'en un nodo con algunas restricciones, crea dos ramas eligiendo una opción de inclusión/exclusión de las posibles, y las asocia con el nodo padre' do
+        nodo_padre = {padre: nil, restricciones: restricciones}
+        restricciones.excluir(0, 1)
+        restricciones.incluir(0, 2)
+        ramas = branch_and_bound.ramificar(nodo_padre)
+
+        rama_izquierda = ramas[0]
+        rama_derecha = ramas[1]
+        expect(rama_izquierda[:padre]).to eq(nodo_padre)
+        expect(rama_derecha[:padre]).to eq(nodo_padre)
+        expect(rama_izquierda[:restricciones].tiene_que_estar?(0, 3)).to eq(true)
+        expect(rama_izquierda[:restricciones].no_tiene_que_estar?(0, 4)).to eq(true)
+        expect(rama_izquierda[:restricciones].no_tiene_que_estar?(2, 3)).to eq(true) # genera ciclo prematuro
+        expect(rama_izquierda[:restricciones].cantidad_de_inclusiones).to eq(2)
+        expect(rama_izquierda[:restricciones].cantidad_de_exclusiones).to eq(3)
+        expect(rama_derecha[:restricciones].no_tiene_que_estar?(0, 3)).to eq(true)
+        expect(rama_derecha[:restricciones].tiene_que_estar?(0, 4)).to eq(true)
+        expect(rama_derecha[:restricciones].no_tiene_que_estar?(2, 4)).to eq(true)  # genera ciclo prematuro
+        expect(rama_derecha[:restricciones].cantidad_de_inclusiones).to eq(2)
+        expect(rama_derecha[:restricciones].cantidad_de_exclusiones).to eq(3)
+      end
 
     end
 

@@ -68,6 +68,7 @@ class RestriccionesTSP
 
   def realizar_inferencias_de_exclusion
     incluir_ejes_que_deben_estar_si_o_si_en_el_tour
+    evitar_ciclos_prematuros
   end
 
   def incluir_ejes_que_deben_estar_si_o_si_en_el_tour
