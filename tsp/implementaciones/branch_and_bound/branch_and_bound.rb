@@ -1,4 +1,5 @@
-require_relative 'aux'
+require_relative '../aux'
+require_relative 'restricciones_tsp'
 
 ### Invariante de las restricciones
 # para X cantidad de ciudades
@@ -88,61 +89,6 @@ def branchear(nodo, nodos, cantidad_de_ciudades)
   nodos << branch_derecho
 end
 
-def con_restricciones_inferidas_al_incluir(una_restriccion, restricciones)
-  # agregar restricción
-  restricciones[una_restriccion[0]][una_restriccion[1]] = 1
-  restricciones[una_restriccion[1]][una_restriccion[0]] = 1
-
-  # ver si no hace falta más de exclusión (para mantener 2 ejes incidentes siempre)
-  cantidad_de_ciudades = restricciones.length
-  (0..cantidad_de_ciudades-1).each do |i|
-    if restricciones[i].count(1) == 2 # dos adyacentes
-      (0..cantidad_de_ciudades-1).each do |j|
-        if restricciones[i][j] == 0
-          restricciones[i][j] = -1
-          restricciones[j][i] = -1
-        end
-      end
-    end
-  end
-  # ver si no hace falta más de exclusión (para que no haya ciclos prematuros)
-  (0..cantidad_de_ciudades-1).each do |i|
-    (0..cantidad_de_ciudades-1).each do |j|
-      if restricciones[i][j] == 0
-        restricciones[i][j] = 1
-        restricciones[j][i] = 1
-        if hay_ciclo_que_no_forma_tour?(restricciones, cantidad_de_ciudades)
-          restricciones[i][j] = -1
-          restricciones[j][i] = -1
-        else
-          restricciones[i][j] = 0
-          restricciones[j][i] = 0
-        end
-      end
-    end
-  end
-
-  # ver si no hace falta más de inclusión
-  (0..cantidad_de_ciudades-1).each do |i|
-    ceros = restricciones[i].count(0)
-    unos = restricciones[i].count(0)
-    if (ceros == 2 && unos == 0) || (ceros == 1 && unos == 1)
-      (0..cantidad_de_ciudades-1).each do |j|
-        if restricciones[i][j] == 0
-          restricciones[i][j] = 1
-          restricciones[j][i] = 1
-        end
-      end
-    end
-  end
-
-  restricciones
-end
-
-def hay_ciclo_que_no_forma_tour?(restricciones, cantidad_de_ciudades)
-  hay_ciclo?(restricciones) && (0..cantidad_de_ciudades-1).any? { |c| restricciones[c].count(1) != 2 }
-end
-
 def proximo_nodo_a_procesar(nodos)
   nodos.first
 end
@@ -156,51 +102,4 @@ def nodo_inicial(cantidad_de_ciudades, distancias)
    restricciones: [],
    cota_inferior: cota_inferior(cantidad_de_ciudades, distancias, []),
    cota_superior: cota_superior(cantidad_de_ciudades, distancias, [])}
-end
-
-class RestriccionesTSP
-
-  def initialize(cantidad_de_ciudades)
-    @cantidad_de_ciudades = cantidad_de_ciudades
-    inicializar_matriz_de_restricciones
-  end
-
-  def inicializar_matriz_de_restricciones
-    @restricciones = []
-    (0..@cantidad_de_ciudades-1).each do |i|
-      @restricciones << [nil] * @cantidad_de_ciudades
-      (0..@cantidad_de_ciudades-1).each do |j|
-        @restricciones[i][j] = i != j ? 0 : -1
-      end
-    end
-  end
-
-  def tiene_que_estar?(desde, hasta)
-    @restricciones[desde][hasta] == 1 && @restricciones[hasta][desde] == 1
-  end
-
-  def no_tiene_que_estar?(desde, hasta)
-    @restricciones[desde][hasta] == -1 && @restricciones[hasta][desde] == -1
-  end
-
-  def incluir(desde, hasta)
-    @restricciones[desde][hasta] = 1
-    @restricciones[hasta][desde] = 1
-  end
-
-  def excluir(desde, hasta)
-    @restricciones[desde][hasta] = -1
-    @restricciones[hasta][desde] = -1
-  end
-
-  def posible_proxima_restriccion
-    (0..@cantidad_de_ciudades-1).each do |i|
-      (0..@cantidad_de_ciudades-1).each do |j|
-        return [i, j] if @restricciones[i][j] == 0
-      end
-    end
-
-    raise 'ya existen todas las restricciones posibles'
-  end
-
 end

@@ -154,27 +154,27 @@ describe 'TSP' do
       it 'retorna la opción 0,1 si no hay restricciones' do
         restricciones = RestriccionesTSP.new(2)
 
-        expect(restricciones.posible_proxima_restriccion).to eq([0,1])
+        expect(restricciones.posible_proxima_restriccion).to eq([0, 1])
       end
 
       it 'retorna la primer opción disponible (1,2)' do
         restricciones = RestriccionesTSP.new(5)
-        restricciones.incluir(0,1)
-        restricciones.incluir(0,2)
-        restricciones.excluir(0,3)
-        restricciones.excluir(0,4)
+        restricciones.incluir(0, 1)
+        restricciones.incluir(0, 2)
+        restricciones.excluir(0, 3)
+        restricciones.excluir(0, 4)
 
-        expect(restricciones.posible_proxima_restriccion).to eq([1,2])
+        expect(restricciones.posible_proxima_restriccion).to eq([1, 2])
       end
 
       it 'lanza un error si ya existen todas las restricciones posibles (o sea, no se puede branchear más)' do
         restricciones = RestriccionesTSP.new(4)
-        restricciones.incluir(0,1)
-        restricciones.incluir(0,2)
-        restricciones.excluir(0,3)
-        restricciones.excluir(1,2)
-        restricciones.excluir(1,3)
-        restricciones.incluir(2,3)
+        restricciones.incluir(0, 1)
+        restricciones.incluir(0, 2)
+        restricciones.excluir(0, 3)
+        restricciones.excluir(1, 2)
+        restricciones.excluir(1, 3)
+        restricciones.incluir(2, 3)
 
         expect {restricciones.posible_proxima_restriccion}.to raise_error
       end
@@ -186,65 +186,43 @@ describe 'TSP' do
       describe 'al incluir un eje' do
 
         it 'no infiere nada más (agrega sólo la restricción nueva) si el conjunto inicial de restricciones es vacío' do
-          restricciones_iniciales = [
-              [-1, 0, 0, 0],
-              [ 0,-1, 0, 0],
-              [ 0, 0,-1, 0],
-              [ 0, 0, 0,-1]
-          ]
-          restriccion_a_agregar = [0, 1]
-          restricciones_esperadas = [
-              [-1, 1, 0, 0],
-              [ 1,-1, 0, 0],
-              [ 0, 0,-1, 0],
-              [ 0, 0, 0,-1]
-          ]
-          nuevas_restricciones = con_restricciones_inferidas_al_incluir(restriccion_a_agregar, restricciones_iniciales)
-          expect(nuevas_restricciones).to eq(restricciones_esperadas)
+          restricciones = RestriccionesTSP.new(4)
+          restricciones.incluir(0, 1)
+
+          expect(restricciones.tiene_que_estar?(0, 1)).to eq(true)
+          expect(restricciones.cantidad_de_inclusiones).to eq(1)
+          expect(restricciones.cantidad_de_exclusiones).to eq(0)
         end
 
         it 'no infiere nada más (agrega sólo la restricción nueva) si la nueva restricción no tiene un efecto en las restricciones anteriores' do
-          restricciones_iniciales = [
-              [-1, 1, 0, 0],
-              [ 1,-1, 0, 0],
-              [ 0, 0,-1, 0],
-              [ 0, 0, 0,-1]
-          ]
-          restriccion_a_agregar = [2, 3]
-          restricciones_esperadas = [
-              [-1, 1, 0, 0],
-              [ 1,-1, 0, 0],
-              [ 0, 0,-1, 1],
-              [ 0, 0, 1,-1]
-          ]
-          nuevas_restricciones = con_restricciones_inferidas_al_incluir(restriccion_a_agregar, restricciones_iniciales)
-          expect(nuevas_restricciones).to eq(restricciones_esperadas)
+          restricciones = RestriccionesTSP.new(4)
+          restricciones.incluir(0, 1)
+          restricciones.incluir(2, 3)
+
+          expect(restricciones.tiene_que_estar?(0, 1)).to eq(true)
+          expect(restricciones.tiene_que_estar?(2, 3)).to eq(true)
+          expect(restricciones.cantidad_de_inclusiones).to eq(2)
+          expect(restricciones.cantidad_de_exclusiones).to eq(0)
         end
 
-        # TODO: desglosar en 3 diferentes tests viendo qué restricciones se van agregando en qué momento
         it 'infiere restricciones nuevas (para que pueda formarse un tour y/o para que no haya ciclos prematuros y/o para completar el tour cuando no hay otros ejes posibles para elegir) si la restricción a agregar hace que haya 2 ejes adyacentes en algún vértice' do
-          restricciones_iniciales = [
-              [-1, 1, 0, 0],
-              [ 1,-1, 0, 0],
-              [ 0, 0,-1, 0],
-              [ 0, 0, 0,-1]
-          ]
-          restriccion_a_agregar = [0, 2]
-          restricciones_esperadas = [
-              [-1, 1, 1,-1],
-              [ 1,-1,-1, 1],
-              [ 1,-1,-1, 1],
-              [-1, 1, 1,-1]
-          ]
-          nuevas_restricciones = con_restricciones_inferidas_al_incluir(restriccion_a_agregar, restricciones_iniciales)
-          expect(nuevas_restricciones).to eq(restricciones_esperadas)
+          restricciones = RestriccionesTSP.new(4)
+          restricciones.incluir(0, 1)
+          restricciones.incluir(0, 2)
+
+          expect(restricciones.tiene_que_estar?(0, 1)).to eq(true)    # porque ya estaba
+          expect(restricciones.tiene_que_estar?(0, 2)).to eq(true)    # porque es la que agregamos
+          expect(restricciones.no_tiene_que_estar?(0, 3)).to eq(true) # porque 0 ya tiene 2 ejes que deben estar
+          expect(restricciones.no_tiene_que_estar?(1, 2)).to eq(true) # porque si estuviese, generaría un ciclo prematuro
+          expect(restricciones.tiene_que_estar?(3, 1)).to eq(true)    # porque es una de las 2 aristas posibles para conectar a 3
+          expect(restricciones.tiene_que_estar?(3, 2)).to eq(true)    # porque es una de las 2 aristas posibles para conectar a 3
+          expect(restricciones.cantidad_de_inclusiones).to eq(2 + 2)
+          expect(restricciones.cantidad_de_exclusiones).to eq(0 + 2)
         end
 
       end
 
-      describe 'al excluir un eje' do
-
-      end
+      describe 'al excluir un eje'
 
     end
 
