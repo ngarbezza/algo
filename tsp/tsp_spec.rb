@@ -52,51 +52,195 @@ describe 'TSP' do
 
     describe 'cálculo de cota inferior' do
 
-      context 'para 5 nodos' do
+      it 'sin ninguna restricción' do
+        restricciones = {ejes_que_tienen_que_estar: [], ejes_que_no_tienen_que_estar: []}
+        resultado = cota_inferior(5, matriz_de_distancias(5), restricciones)
 
-        it 'sin ninguna restricción' do
-          restricciones = {ejes_que_tienen_que_estar: [], ejes_que_no_tienen_que_estar: []}
-          resultado = calcular_cota_inferior(5, matriz_de_distancias(5), restricciones)
+        expect(resultado).to eq(17.5) # ((3 + 2) + (3 + 3) + (4 + 4) + (2 + 5) + (3 + 6)).fdiv(2)
+      end
 
-          expect(resultado).to eq(17.5) # ((3 + 2) + (3 + 3) + (4 + 4) + (2 + 5) + (3 + 6)).fdiv(2)
+      it 'con la restricción de que un eje debe estar' do
+        restricciones = {ejes_que_tienen_que_estar: [[0, 4]], ejes_que_no_tienen_que_estar: []}
+        resultado = cota_inferior(5, matriz_de_distancias(5), restricciones)
+
+        expect(resultado).to eq(20) # ((2 + 7) + (3 + 3) + (4 + 4) + (2 + 5) + (3 + 7)).fdiv(2)
+      end
+
+      it 'con la restricción de que un eje NO debe estar' do
+        restricciones = {ejes_que_tienen_que_estar: [], ejes_que_no_tienen_que_estar: [[0, 1]]}
+        resultado = cota_inferior(5, matriz_de_distancias(5), restricciones)
+
+        expect(resultado).to eq(18.5) # ((2 + 4) + (3 + 4) + (4 + 4) + (2 + 5) + (3 + 6)).fdiv(2)
+      end
+
+      it 'con más de una restricción' do
+        restricciones = {ejes_que_tienen_que_estar: [[0, 2], [0, 4]], ejes_que_no_tienen_que_estar: [[0, 1], [0, 3]]}
+        resultado = cota_inferior(5, matriz_de_distancias(5), restricciones)
+
+        expect(resultado).to eq(23.5) # ((4 + 7) + (3 + 4) + (4 + 4) + (5 + 6) + (3 + 7)).fdiv(2)
+      end
+
+      it 'con todas las restricciones que conforman un tour' do
+        restricciones = {ejes_que_tienen_que_estar: [[0, 1], [0, 3], [2, 3], [2, 4], [1, 4]],
+                         ejes_que_no_tienen_que_estar: [[0, 2], [0, 4], [1, 2], [1, 3], [3, 4]]}
+        resultado = cota_inferior(5, matriz_de_distancias(5), restricciones)
+
+        expect(resultado).to eq(21) # ejes que conforman tour 0 -> 1 -> 4 -> 2 -> 3 -> 0 (21)
+      end
+
+    end
+
+    describe 'cálculo de cota superior' do
+
+      it 'sin ninguna restricción' do
+        pending
+        # asume que arranca desde el vértice 0
+        restricciones = {ejes_que_tienen_que_estar: [], ejes_que_no_tienen_que_estar: []}
+        resultado = cota_superior(5, matriz_de_distancias(5), restricciones)
+
+        expect(resultado).to eq(21)
+      end
+
+      it 'con la restricción de que un eje debe estar' do
+        pending
+        restricciones = {ejes_que_tienen_que_estar: [[0, 4]], ejes_que_no_tienen_que_estar: []}
+        resultado = cota_superior(5, matriz_de_distancias(5), restricciones)
+
+        expect(resultado).to eq(20)
+      end
+
+      it 'con la restricción de que un eje NO debe estar' do
+        pending
+        restricciones = {ejes_que_tienen_que_estar: [], ejes_que_no_tienen_que_estar: [[0, 1]]}
+        resultado = cota_superior(5, matriz_de_distancias(5), restricciones)
+
+        expect(resultado).to eq(18.5)
+      end
+
+      it 'con más de una restricción' do
+        pending
+        restricciones = {ejes_que_tienen_que_estar: [[0, 2], [0, 4]], ejes_que_no_tienen_que_estar: [[0, 1], [0, 3]]}
+        resultado = cota_superior(5, matriz_de_distancias(5), restricciones)
+
+        expect(resultado).to eq(23.5)
+      end
+
+      it 'con todas las restricciones que conforman un tour' do
+        pending
+        restricciones = {ejes_que_tienen_que_estar: [[0, 1], [0, 3], [2, 3], [2, 4], [1, 4]],
+                         ejes_que_no_tienen_que_estar: [[0, 2], [0, 4], [1, 2], [1, 3], [3, 4]]}
+        resultado = cota_superior(5, matriz_de_distancias(5), restricciones)
+
+        expect(resultado).to eq(21)
+      end
+
+    end
+
+    describe 'búsqueda de una nueva restricción para branchear' do
+
+      it 'retorna la opción 0,1 si no hay restricciones' do
+        restricciones = [
+            [-1,  0],
+            [0 , -1]
+        ]
+
+        resultado = buscar_nueva_restriccion_para_branchear(restricciones)
+        expect(resultado).to eq([0,1])
+      end
+
+      it 'retorna la primer opción disponible (1,2)' do
+        restricciones = [
+            [-1,  1,  1, -1, -1],
+            [ 1, -1,  0,  0,  0],
+            [ 1,  0, -1,  0,  0],
+            [-1,  0,  0, -1,  0],
+            [-1,  0,  0,  0, -1]
+        ]
+
+        resultado = buscar_nueva_restriccion_para_branchear(restricciones)
+        expect(resultado).to eq([1,2])
+      end
+
+      it 'lanza un error si ya existen todas las restricciones posibles (o sea, no se puede branchear más)' do
+        restricciones = [
+            [-1,  1,  1, -1],
+            [ 1, -1, -1,  1],
+            [ 1, -1, -1,  1],
+            [-1,  1,  1, -1],
+        ]
+
+        expect {buscar_nueva_restriccion_para_branchear(restricciones)}.to raise_error
+      end
+
+    end
+
+    describe 'inferencia de restricciones' do
+
+      describe 'al incluir un eje' do
+
+        it 'no infiere nada más (agrega sólo la restricción nueva) si el conjunto inicial de restricciones es vacío' do
+          restricciones_iniciales = [
+              [-1, 0, 0, 0],
+              [ 0,-1, 0, 0],
+              [ 0, 0,-1, 0],
+              [ 0, 0, 0,-1]
+          ]
+          restriccion_a_agregar = [0, 1]
+          restricciones_esperadas = [
+              [-1, 1, 0, 0],
+              [ 1,-1, 0, 0],
+              [ 0, 0,-1, 0],
+              [ 0, 0, 0,-1]
+          ]
+          nuevas_restricciones = con_restricciones_inferidas_al_incluir(restriccion_a_agregar, restricciones_iniciales)
+          expect(nuevas_restricciones).to eq(restricciones_esperadas)
         end
 
-        it 'con la restricción de que un eje debe estar' do
-          restricciones = {ejes_que_tienen_que_estar: [[0, 4]], ejes_que_no_tienen_que_estar: []}
-          resultado = calcular_cota_inferior(5, matriz_de_distancias(5), restricciones)
-
-          expect(resultado).to eq(20) # ((2 + 7) + (3 + 3) + (4 + 4) + (2 + 5) + (3 + 7)).fdiv(2)
+        it 'no infiere nada más (agrega sólo la restricción nueva) si la nueva restricción no tiene un efecto en las restricciones anteriores' do
+          restricciones_iniciales = [
+              [-1, 1, 0, 0],
+              [ 1,-1, 0, 0],
+              [ 0, 0,-1, 0],
+              [ 0, 0, 0,-1]
+          ]
+          restriccion_a_agregar = [2, 3]
+          restricciones_esperadas = [
+              [-1, 1, 0, 0],
+              [ 1,-1, 0, 0],
+              [ 0, 0,-1, 1],
+              [ 0, 0, 1,-1]
+          ]
+          nuevas_restricciones = con_restricciones_inferidas_al_incluir(restriccion_a_agregar, restricciones_iniciales)
+          expect(nuevas_restricciones).to eq(restricciones_esperadas)
         end
 
-        it 'con la restricción de que un eje NO debe estar' do
-          restricciones = {ejes_que_tienen_que_estar: [], ejes_que_no_tienen_que_estar: [[0, 1]]}
-          resultado = calcular_cota_inferior(5, matriz_de_distancias(5), restricciones)
-
-          expect(resultado).to eq(18.5) # ((2 + 4) + (3 + 4) + (4 + 4) + (2 + 5) + (3 + 6)).fdiv(2)
+        # TODO: desglosar en 3 diferentes tests viendo qué restricciones se van agregando en qué momento
+        it 'infiere restricciones nuevas (para que pueda formarse un tour y/o para que no haya ciclos prematuros y/o para completar el tour cuando no hay otros ejes posibles para elegir) si la restricción a agregar hace que haya 2 ejes adyacentes en algún vértice' do
+          restricciones_iniciales = [
+              [-1, 1, 0, 0],
+              [ 1,-1, 0, 0],
+              [ 0, 0,-1, 0],
+              [ 0, 0, 0,-1]
+          ]
+          restriccion_a_agregar = [0, 2]
+          restricciones_esperadas = [
+              [-1, 1, 1,-1],
+              [ 1,-1,-1, 1],
+              [ 1,-1,-1, 1],
+              [-1, 1, 1,-1]
+          ]
+          nuevas_restricciones = con_restricciones_inferidas_al_incluir(restriccion_a_agregar, restricciones_iniciales)
+          expect(nuevas_restricciones).to eq(restricciones_esperadas)
         end
 
-        it 'con más de una restricción' do
-          restricciones = {ejes_que_tienen_que_estar: [[0, 2], [0, 4]], ejes_que_no_tienen_que_estar: [[0, 1], [0, 3]]}
-          resultado = calcular_cota_inferior(5, matriz_de_distancias(5), restricciones)
+      end
 
-          expect(resultado).to eq(23.5) # ((4 + 7) + (3 + 4) + (4 + 4) + (5 + 6) + (3 + 7)).fdiv(2)
-        end
-
-        it 'con todas las restricciones que conforman un tour' do
-          restricciones = {ejes_que_tienen_que_estar: [[0, 1], [0, 3], [2, 3], [2, 4], [1, 4]],
-                           ejes_que_no_tienen_que_estar: [[0, 2], [0, 4], [1, 2], [1, 3], [3, 4]]}
-          resultado = calcular_cota_inferior(5, matriz_de_distancias(5), restricciones)
-
-          expect(resultado).to eq(21) # ejes que conforman tour 0 -> 1 -> 4 -> 2 -> 3 -> 0 (21)
-        end
+      describe 'al excluir un eje' do
 
       end
 
     end
 
-    describe 'cálculo de cota superior'
-
   end
 
 end
-
