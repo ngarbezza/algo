@@ -103,40 +103,37 @@ describe 'TSP' do
 
     describe 'cálculo de cota superior' do
 
+      # TODO: heurística floja (impone restricciones al azar)
+
       it 'sin ninguna restricción' do
-        pending
         resultado = branch_and_bound.cota_superior(restricciones)
 
-        expect(resultado).to eq(21) # depende de que heurística use
+        expect(resultado).to eq([[0, 1, 3, 4, 2, 0], 27])
       end
 
       it 'con la restricción de que un eje debe estar' do
-        pending
-        restricciones.incluir(0, 4)
+        restricciones.incluir(0, 2)
         resultado = branch_and_bound.cota_superior(restricciones)
 
-        expect(resultado).to eq(20) # depende de que heurística use
+        expect(resultado).to eq([[0, 1, 3, 4, 2, 0], 27])
       end
 
       it 'con la restricción de que un eje NO debe estar' do
-        pending
-        restricciones.excluir(0, 1)
+        restricciones.excluir(0, 3)
         resultado = branch_and_bound.cota_superior(restricciones)
 
-        expect(resultado).to eq(18.5) # depende de que heurística use
+        expect(resultado).to eq([[0, 1, 3, 4, 2, 0], 27])
       end
 
       it 'con más de una restricción' do
-        pending
         restricciones.incluir(0, 2)
         restricciones.incluir(0, 4)
         resultado = branch_and_bound.cota_superior(restricciones)
 
-        expect(resultado).to eq(23.5) # depende de que heurística use
+        expect(resultado).to eq([[0, 2, 1, 3, 4, 0], 27])
       end
 
       it 'con todas las restricciones que conforman un tour' do
-        pending
         restricciones.incluir(0, 1)
         restricciones.incluir(1, 4)
         restricciones.incluir(4, 2)
@@ -144,7 +141,7 @@ describe 'TSP' do
         restricciones.incluir(3, 0)
         resultado = branch_and_bound.cota_superior(restricciones)
 
-        expect(resultado).to eq(21) # la única solución para ese tour
+        expect(resultado).to eq([[0, 1, 4, 2, 3, 0], 21])
       end
 
     end
