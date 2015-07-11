@@ -17,13 +17,13 @@ class BranchAndBoundTSP
 
   def cota_inferior(restricciones)
     total = 0
-    @ciudades.each do |i|
+    for i in @ciudades
       primer_eje_elegido = Float::INFINITY
       primer_eje_elegido_por_ser_minimo = true
       segundo_eje_elegido = Float::INFINITY
       segundo_eje_elegido_por_ser_minimo = true
 
-      @ciudades.each do |j|
+      for j in @ciudades
         if restricciones.tiene_que_estar?(i, j)
           if primer_eje_elegido_por_ser_minimo
             segundo_eje_elegido = primer_eje_elegido # lo muevo de lugar para que entre el que tiene que estar sí o sí
@@ -73,7 +73,7 @@ class BranchAndBoundTSP
 
   def distancia_para_recorrer(tour)
     distancia = costo_en_llegar_a(0, tour.last, @distancias)
-    (1..tour.length-1).each do |i|
+    for i in (1..tour.length-1)
       distancia += costo_en_llegar_a(tour[i], tour[i-1], @distancias)
     end
     distancia
@@ -100,12 +100,14 @@ class BranchAndBoundTSP
     restricciones_rama_izquierda = nodo[:restricciones].clone
     restricciones_rama_izquierda.incluir nueva_restriccion[0], nueva_restriccion[1]
     rama_izquierda = { padre: nodo, restricciones: restricciones_rama_izquierda }
+    nodo[:hijo_izquierdo] = rama_izquierda
     @total_nodos += 1
     calcular_cotas_para(rama_izquierda)
     if nodo[:restricciones].puede_excluir? nueva_restriccion[0], nueva_restriccion[1]
       restricciones_rama_derecha = nodo[:restricciones].clone
       restricciones_rama_derecha.excluir nueva_restriccion[0], nueva_restriccion[1]
       rama_derecha = { padre: nodo, restricciones: restricciones_rama_derecha }
+      nodo[:hijo_derecho] = rama_derecha
       @total_nodos += 1
       calcular_cotas_para(rama_derecha)
       @nodos.unshift rama_izquierda
@@ -169,9 +171,8 @@ class BranchAndBoundTSP
   def podar(nodo)
     @nodos.delete(nodo)
     @total_nodos -= 1
-    @nodos.each do |n|
-      podar(n) if n[:padre] == nodo
-    end
+    podar(nodo[:hijo_izquierdo]) if nodo[:hijo_izquierdo]
+    podar(nodo[:hijo_derecho]) if nodo[:hijo_derecho]
   end
 
   def intentar_podar

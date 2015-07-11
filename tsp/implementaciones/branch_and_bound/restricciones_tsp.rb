@@ -37,8 +37,8 @@ class RestriccionesTSP
   end
 
   def posible_proxima_restriccion
-    @ciudades.each do |i|
-      @ciudades.each do |j|
+    for i in @ciudades
+      for j in @ciudades
         return [i, j] if @restricciones[i][j] == 0
       end
     end
@@ -108,11 +108,11 @@ class RestriccionesTSP
   end
 
   def incluir_ejes_que_deben_estar_si_o_si_en_el_tour
-    @ciudades.each do |i|
+    for i in @ciudades
       ceros = @restricciones[i].count(0)
       unos = @restricciones[i].count(1)
       if (ceros == 2 && unos == 0) || (ceros == 1 && unos == 1)
-        @ciudades.each do |j|
+        for j in @ciudades
           incluir(i, j) if @restricciones[i][j] == 0
         end
       end
@@ -120,12 +120,12 @@ class RestriccionesTSP
   end
 
   def evitar_ciclos_prematuros
-    @ciudades.each do |i|
-      @ciudades.each do |j|
+    for i in @ciudades
+      for j in @ciudades
         if @restricciones[i][j] == 0
           @restricciones[i][j] = 1
           @restricciones[j][i] = 1
-          if hay_ciclo?(@restricciones) && no_hay_tour_completo?
+          if no_hay_tour_completo? && hay_ciclo?(@restricciones)
             @restricciones[i][j] = -1
             @restricciones[j][i] = -1
             @cantidad_de_exclusiones += 1
@@ -139,9 +139,9 @@ class RestriccionesTSP
   end
 
   def mantener_siempre_2_ejes_incidentes_por_cada_vertice
-    @ciudades.each do |i|
+    for i in @ciudades
       if @restricciones[i].count(1) == 2
-        @ciudades.each do |j|
+        for j in @ciudades
           if @restricciones[i][j] == 0
             @restricciones[i][j] = -1
             @restricciones[j][i] = -1

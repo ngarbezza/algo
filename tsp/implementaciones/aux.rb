@@ -15,7 +15,7 @@ end
 def hay_ciclo?(gm)
   # gm denota un grafo implementado con una matriz de adyacencias
   vs = [false] * gm.length # inicializar vector de visitados
-  (0..gm.length-1).each do |i|
+  for i in 0..gm.length-1
     unless vs[i]         # si no lo visité antes
       vs[i] = true       # visitado
       return true if hay_ciclo_en_contexto(gm, i, i, vs)
@@ -28,19 +28,16 @@ def hay_ciclo_en_contexto(gm, s, p, vs)
   # detecta un ciclo en un grafo comenzando por un vértice s,
   # viniendo de un vértice p. teniendo en cuenta ciertos nodos
   # visitados denotados por el arreglo vs
-  adyacentes = []
-  gm[s].each_with_index do |e, i|
+  for v in 0..gm[s].length-1
+    e = gm[s][v]
     if e == 1
-      adyacentes << i
+      if p != v                # se excluye el lugar desde donde venimos
+        return true if vs[v]   # ciclo detectado
+        vs[v] = true
+        return true if hay_ciclo_en_contexto(gm, v, s, vs)
+      end
     end
   end
 
-  adyacentes.each do |v|
-    if p != v                # se excluye el lugar desde donde venimos
-      return true if vs[v]   # ciclo detectado
-      vs[v] = true
-      return true if hay_ciclo_en_contexto(gm, v, s, vs)
-    end
-  end
   false
 end
