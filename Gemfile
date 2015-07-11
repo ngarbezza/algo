@@ -1,3 +1,5 @@
+ruby '2.2.2'
+
 gem 'rspec'
 
 if ENV['RM_INFO']
