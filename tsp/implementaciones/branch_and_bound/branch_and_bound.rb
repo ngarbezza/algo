@@ -1,6 +1,5 @@
 require_relative '../aux'
 require_relative 'restricciones_tsp'
-require 'awesome_print'
 
 class BranchAndBoundTSP
 
@@ -8,6 +7,7 @@ class BranchAndBoundTSP
     @cantidad_de_ciudades = cantidad_de_ciudades
     @ciudades = 0..@cantidad_de_ciudades-1
     @distancias = distancias
+    @nodos = []
     @total_nodos = 0
     @mejor_cota_inferior = 0
     @mejor_cota_superior = Float::INFINITY
@@ -79,32 +79,18 @@ class BranchAndBoundTSP
     distancia
   end
 
-  ### BRANCH AND BOUND
-
   def resolver
-    @nodos = []
-    @nodos_procesados = 0
     @nodos << nodo_inicial
-
     @total_nodos = 1
 
-    # puts "RAMIFICACION: #{@total_nodos} nodos activos en total (#{@nodos_procesados} ya procesados): cota inferior #{@mejor_cota_inferior}, cota superior #{@mejor_cota_superior}"
-
-    nodo_actual = proximo_nodo_a_procesar
+    nodo_actual = @nodos.first
     calcular_cotas_para(nodo_actual)
     until encontre_solucion_optima?
-      if nodo_actual[:restricciones].no_hay_tour_completo?
-        @nodos = ramificar(nodo_actual) + @nodos
-        # puts "RAMIFICACION: #{@total_nodos} nodos activos en total (#{@nodos_procesados} ya procesados): cota inferior #{@mejor_cota_inferior}, cota superior #{@mejor_cota_superior}"
-      else
-
-      end
+      ramificar(nodo_actual) if nodo_actual[:restricciones].no_hay_tour_completo?
       @nodos.delete(nodo_actual)
-      @nodos_procesados += 1
       nodo_actual = proximo_nodo_a_procesar
-      calcular_cotas_para(nodo_actual)
       intentar_podar
-      puts "#{@total_nodos} nodos activos en total (#{@nodos_procesados} ya procesados) cota inferior #{@mejor_cota_inferior}, cota superior #{@mejor_cota_superior}"
+      puts "#{@total_nodos} nodos en el árbol, cota inferior #{@mejor_cota_inferior}, cota superior #{@mejor_cota_superior}"
     end
     @solucion
   end
@@ -113,26 +99,19 @@ class BranchAndBoundTSP
     nueva_restriccion = nodo[:restricciones].posible_proxima_restriccion
     restricciones_rama_izquierda = nodo[:restricciones].clone
     restricciones_rama_izquierda.incluir nueva_restriccion[0], nueva_restriccion[1]
-    rama_izquierda = {
-        padre: nodo,
-        restricciones: restricciones_rama_izquierda #,
-        #paso: "incluir #{nueva_restriccion}"
-    }
+    rama_izquierda = { padre: nodo, restricciones: restricciones_rama_izquierda }
     @total_nodos += 1
-    # puts "BRANCH IZQUIERDO: #{rama_izquierda[:paso]}"
+    calcular_cotas_para(rama_izquierda)
     if nodo[:restricciones].puede_excluir? nueva_restriccion[0], nueva_restriccion[1]
       restricciones_rama_derecha = nodo[:restricciones].clone
       restricciones_rama_derecha.excluir nueva_restriccion[0], nueva_restriccion[1]
-      rama_derecha = {
-          padre: nodo,
-          restricciones: restricciones_rama_derecha #,
-          #paso: "excluir #{nueva_restriccion}"
-      }
+      rama_derecha = { padre: nodo, restricciones: restricciones_rama_derecha }
       @total_nodos += 1
-      # puts "BRANCH DERECHO: #{rama_derecha[:paso]}"
-      [rama_derecha, rama_izquierda]
+      calcular_cotas_para(rama_derecha)
+      @nodos.unshift rama_izquierda
+      @nodos.unshift rama_derecha
     else
-      [rama_izquierda]
+      @nodos.unshift rama_izquierda
     end
   end
 
@@ -145,7 +124,7 @@ class BranchAndBoundTSP
   end
 
   def hay_mas_nodos_por_explorar?
-    @nodos.any? { |nodo| !nodo[:cota_superior] || !nodo[:cota_inferior] }
+    @nodos.any? { |nodo| nodo[:restricciones].no_hay_tour_completo? }
   end
 
   def cotas_son_iguales?
@@ -156,11 +135,11 @@ class BranchAndBoundTSP
     {padre: nil, restricciones: RestriccionesTSP.new(@cantidad_de_ciudades)}
   end
 
-  def calcular_cotas_para(nodo_actual)
-    nodo_actual[:cota_inferior] = cota_inferior(nodo_actual[:restricciones])
-    nodo_actual[:cota_superior] = cota_superior(nodo_actual[:restricciones])
+  def calcular_cotas_para(nodo)
+    nodo[:cota_inferior] = cota_inferior(nodo[:restricciones])
+    nodo[:cota_superior] = cota_superior(nodo[:restricciones])
 
-    propagar_informacion_de_cotas(nodo_actual)
+    propagar_informacion_de_cotas(nodo)
   end
 
   def propagar_informacion_de_cotas(nodo)
@@ -177,39 +156,31 @@ class BranchAndBoundTSP
         end
       else
         @mejor_cota_inferior_es_de_tour_completo = true
-        # sin importar que haya pasado antes, esta es la posta
         @mejor_cota_inferior = nodo[:cota_inferior]
         @solucion = [nodo[:restricciones].tour_completo, @mejor_cota_inferior]
       end
     else
-      if !@mejor_cota_inferior_es_de_tour_completo
-        if nodo[:cota_inferior] > @mejor_cota_inferior
-          @mejor_cota_inferior = nodo[:cota_inferior]
-        end
+      if !@mejor_cota_inferior_es_de_tour_completo && nodo[:cota_inferior] > @mejor_cota_inferior
+        @mejor_cota_inferior = nodo[:cota_inferior]
       end
     end
+  end
 
+  def podar(nodo)
+    @nodos.delete(nodo)
+    @total_nodos -= 1
+    @nodos.each do |n|
+      podar(n) if n[:padre] == nodo
+    end
   end
 
   def intentar_podar
     @nodos.each do |nodo|
-      if puede_ser_podado?(nodo)
-        @nodos.each do |n|
-          if n[:padre] == nodo
-            @nodos.delete(n)
-            @total_nodos -= 1
-          end
-        end
-        @nodos.delete(nodo)
-        @total_nodos -= 1
-
-        # puts "PODA: #{@total_nodos} nodos activos en total (#{@nodos_procesados} ya procesados): cota inferior #{@mejor_cota_inferior}, cota superior #{@mejor_cota_superior}"
-      end
+      podar(nodo) if puede_ser_podado?(nodo)
     end
   end
 
   def puede_ser_podado?(nodo)
-    return false if nodo[:cota_inferior].nil?
     nodo[:cota_inferior] > @mejor_cota_superior || (@mejor_cota_inferior_es_de_tour_completo && @mejor_cota_inferior < nodo[:cota_inferior])
   end
 
