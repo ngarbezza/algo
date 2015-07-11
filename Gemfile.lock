@@ -1,5 +1,7 @@
 GEM
+  remote: https://rubygems.org/
   specs:
+    awesome_print (1.6.1)
     debase (0.1.4)
       debase-ruby_core_source
     debase-ruby_core_source (0.7.5)
@@ -24,6 +26,10 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  awesome_print
   debase
   rspec
   ruby-debug-ide
+
+BUNDLED WITH
+   1.10.5
