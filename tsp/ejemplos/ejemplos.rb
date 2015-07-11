@@ -18,6 +18,15 @@ def ejemplo_5(algoritmo)
   tsp algoritmo, 5, 0, matriz_de_distancias(5)
 end
 
+def ejemplo_6(algoritmo)
+  # resultado óptimo esperado:
+  #
+  #  recorrido: 0 -> 2 -> 1 -> 4 -> 3 -> -> 5 -> 0
+  #  distancia: 15
+  #
+  tsp algoritmo, 6, 0, matriz_de_distancias(6)
+end
+
 def ejemplo_11(algoritmo)
   # resultado óptimo esperado:
   #
