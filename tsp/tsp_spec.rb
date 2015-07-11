@@ -103,7 +103,7 @@ describe 'TSP' do
 
     describe 'cálculo de cota superior' do
 
-      # TODO: heurística floja (impone restricciones al azar)
+      # TODO: heurística floja (impone restricciones al azar sin siquiera ver el costo)
 
       it 'sin ninguna restricción' do
         resultado = branch_and_bound.cota_superior(restricciones)
@@ -259,8 +259,8 @@ describe 'TSP' do
         nodo_inicial = branch_and_bound.nodo_inicial
         ramas = branch_and_bound.ramificar(nodo_inicial)
 
-        rama_izquierda = ramas[0]
-        rama_derecha = ramas[1]
+        rama_izquierda = ramas[1]
+        rama_derecha = ramas[0]
         expect(rama_izquierda[:padre]).to eq(nodo_inicial)
         expect(rama_derecha[:padre]).to eq(nodo_inicial)
         expect(rama_izquierda[:restricciones].tiene_que_estar?(0, 1)).to eq(true)
@@ -275,8 +275,8 @@ describe 'TSP' do
         restricciones.incluir(0, 2)
         ramas = branch_and_bound.ramificar(nodo_padre)
 
-        rama_izquierda = ramas[0]
-        rama_derecha = ramas[1]
+        rama_izquierda = ramas[1]
+        rama_derecha = ramas[0]
         expect(rama_izquierda[:padre]).to eq(nodo_padre)
         expect(rama_derecha[:padre]).to eq(nodo_padre)
         expect(rama_izquierda[:restricciones].tiene_que_estar?(0, 3)).to eq(true)
@@ -289,6 +289,19 @@ describe 'TSP' do
         expect(rama_derecha[:restricciones].no_tiene_que_estar?(2, 4)).to eq(true)  # genera ciclo prematuro
         expect(rama_derecha[:restricciones].cantidad_de_inclusiones).to eq(2)
         expect(rama_derecha[:restricciones].cantidad_de_exclusiones).to eq(3)
+      end
+
+      it 'crea sólo la rama de inclusión cuando no es posible excluir' do
+        cantidad_de_ciudades = 4
+        branch_and_bound = BranchAndBoundTSP.new cantidad_de_ciudades, matriz_de_distancias(cantidad_de_ciudades)
+        restricciones = RestriccionesTSP.new cantidad_de_ciudades
+        restricciones.incluir 0, 1
+        allow(restricciones).to receive(:posible_proxima_restriccion) { [2, 3] }
+        nodo = {padre: nil, restricciones: restricciones}
+        ramas = branch_and_bound.ramificar(nodo)
+
+        expect(ramas.length).to eq(1)
+        expect(ramas[0][:restricciones].tiene_que_estar?(2, 3)).to eq(true)
       end
 
     end
@@ -313,6 +326,31 @@ describe 'TSP' do
 
         expect(restricciones.hay_tour_completo?).to eq(true)
         expect(restricciones.tour_completo).to eq([0, 1, 4, 2, 3, 0])
+      end
+
+    end
+
+    describe 'verificar si se puede excluir' do
+
+      let(:cantidad_de_ciudades) { 4 }
+
+      it 'se puede cuando no hay otras restricciones' do
+        expect(restricciones.puede_excluir?(0, 1)).to eq(true)
+      end
+
+      it 'se puede cuando hay una restricción pero no afecta la eventual exclusión' do
+        restricciones.incluir 0, 2
+        expect(restricciones.puede_excluir?(2, 3)).to eq(true)
+      end
+
+      it 'no se puede cuando quedan sólo 2 vértices sin restricciones y si no los uniera, generaría siempre un ciclo prematuro' do
+        restricciones.incluir 0, 1
+        expect(restricciones.puede_excluir?(2, 3)).to eq(false)
+      end
+
+      it 'no se puede cuando ya excluí todas las ciudades, menos 2' do
+        restricciones.excluir 0, 1
+        expect(restricciones.puede_excluir?(2, 3)).to eq(true)
       end
 
     end

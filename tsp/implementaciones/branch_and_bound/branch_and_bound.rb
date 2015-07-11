@@ -1,5 +1,6 @@
 require_relative '../aux'
 require_relative 'restricciones_tsp'
+require 'awesome_print'
 
 class BranchAndBoundTSP
 
@@ -7,6 +8,9 @@ class BranchAndBoundTSP
     @cantidad_de_ciudades = cantidad_de_ciudades
     @ciudades = 0..@cantidad_de_ciudades-1
     @distancias = distancias
+    @total_nodos = 0
+    @mejor_cota_inferior = 0
+    @mejor_cota_superior = Float::INFINITY
   end
 
   ### COTA INFERIOR
@@ -79,26 +83,28 @@ class BranchAndBoundTSP
 
   def resolver
     @nodos = []
-    @nodos_procesados = []
+    @nodos_procesados = 0
     @nodos << nodo_inicial
 
     @total_nodos = 1
 
-    puts "RAMIFICACION: #{@total_nodos} nodos activos en total (#{@nodos_procesados.length} ya procesados): cota inferior #{@mejor_cota_inferior}, cota superior #{@mejor_cota_superior}"
+    # puts "RAMIFICACION: #{@total_nodos} nodos activos en total (#{@nodos_procesados} ya procesados): cota inferior #{@mejor_cota_inferior}, cota superior #{@mejor_cota_superior}"
 
     nodo_actual = proximo_nodo_a_procesar
     calcular_cotas_para(nodo_actual)
     until encontre_solucion_optima?
-      if !nodo_actual[:restricciones].hay_tour_completo?
+      if nodo_actual[:restricciones].no_hay_tour_completo?
         @nodos = ramificar(nodo_actual) + @nodos
-        @total_nodos += 2
-        puts "RAMIFICACION: #{@total_nodos} nodos activos en total (#{@nodos_procesados.length} ya procesados): cota inferior #{@mejor_cota_inferior}, cota superior #{@mejor_cota_superior}"
+        # puts "RAMIFICACION: #{@total_nodos} nodos activos en total (#{@nodos_procesados} ya procesados): cota inferior #{@mejor_cota_inferior}, cota superior #{@mejor_cota_superior}"
+      else
+
       end
       @nodos.delete(nodo_actual)
-      @nodos_procesados << nodo_actual
+      @nodos_procesados += 1
       nodo_actual = proximo_nodo_a_procesar
       calcular_cotas_para(nodo_actual)
       intentar_podar
+      puts "#{@total_nodos} nodos activos en total (#{@nodos_procesados} ya procesados) cota inferior #{@mejor_cota_inferior}, cota superior #{@mejor_cota_superior}"
     end
     @solucion
   end
@@ -107,17 +113,27 @@ class BranchAndBoundTSP
     nueva_restriccion = nodo[:restricciones].posible_proxima_restriccion
     restricciones_rama_izquierda = nodo[:restricciones].clone
     restricciones_rama_izquierda.incluir nueva_restriccion[0], nueva_restriccion[1]
-    restricciones_rama_derecha = nodo[:restricciones].clone
-    restricciones_rama_derecha.excluir nueva_restriccion[0], nueva_restriccion[1]
     rama_izquierda = {
         padre: nodo,
-        restricciones: restricciones_rama_izquierda
+        restricciones: restricciones_rama_izquierda #,
+        #paso: "incluir #{nueva_restriccion}"
     }
-    rama_derecha = {
-        padre: nodo,
-        restricciones: restricciones_rama_derecha
-    }
-    [rama_izquierda, rama_derecha]
+    @total_nodos += 1
+    # puts "BRANCH IZQUIERDO: #{rama_izquierda[:paso]}"
+    if nodo[:restricciones].puede_excluir? nueva_restriccion[0], nueva_restriccion[1]
+      restricciones_rama_derecha = nodo[:restricciones].clone
+      restricciones_rama_derecha.excluir nueva_restriccion[0], nueva_restriccion[1]
+      rama_derecha = {
+          padre: nodo,
+          restricciones: restricciones_rama_derecha #,
+          #paso: "excluir #{nueva_restriccion}"
+      }
+      @total_nodos += 1
+      # puts "BRANCH DERECHO: #{rama_derecha[:paso]}"
+      [rama_derecha, rama_izquierda]
+    else
+      [rama_izquierda]
+    end
   end
 
   def proximo_nodo_a_procesar
@@ -148,7 +164,7 @@ class BranchAndBoundTSP
   end
 
   def propagar_informacion_de_cotas(nodo)
-    if !@mejor_cota_superior || (nodo[:cota_superior][1] < @mejor_cota_superior)
+    if nodo[:cota_superior][1] < @mejor_cota_superior
       @mejor_cota_superior = nodo[:cota_superior][1]
       @solucion = nodo[:cota_superior]
     end
@@ -167,7 +183,7 @@ class BranchAndBoundTSP
       end
     else
       if !@mejor_cota_inferior_es_de_tour_completo
-        if !@mejor_cota_inferior || (nodo[:cota_inferior] > @mejor_cota_inferior)
+        if nodo[:cota_inferior] > @mejor_cota_inferior
           @mejor_cota_inferior = nodo[:cota_inferior]
         end
       end
@@ -187,7 +203,7 @@ class BranchAndBoundTSP
         @nodos.delete(nodo)
         @total_nodos -= 1
 
-        puts "PODA: #{@total_nodos} nodos activos en total (#{@nodos_procesados.length} ya procesados): cota inferior #{@mejor_cota_inferior}, cota superior #{@mejor_cota_superior}"
+        # puts "PODA: #{@total_nodos} nodos activos en total (#{@nodos_procesados} ya procesados): cota inferior #{@mejor_cota_inferior}, cota superior #{@mejor_cota_superior}"
       end
     end
   end

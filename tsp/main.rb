@@ -1,9 +1,8 @@
 require_relative 'ejemplos/ejemplos'
+require 'benchmark'
 
-ejemplo = 11
-
+ejemplo = 6
 bb = BranchAndBoundTSP.new(ejemplo, matriz_de_distancias(ejemplo))
-
-sol = bb.resolver
-
+sol = nil
+puts Benchmark.measure { sol = bb.resolver }
 puts sol.to_s

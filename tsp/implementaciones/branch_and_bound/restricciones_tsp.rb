@@ -1,6 +1,6 @@
 class RestriccionesTSP
 
-  attr_reader :cantidad_de_inclusiones, :cantidad_de_exclusiones
+  attr_reader :cantidad_de_inclusiones, :cantidad_de_exclusiones, :restricciones
 
   def initialize(ciudades, inclusiones=0, exclusiones=0, restricciones=nil)
     @cantidad_de_ciudades = ciudades
@@ -80,7 +80,17 @@ class RestriccionesTSP
     self.class.new @cantidad_de_ciudades,
                    @cantidad_de_inclusiones,
                    @cantidad_de_exclusiones,
-                   @restricciones.map(&:clone)
+    @restricciones.map(&:clone)
+  end
+
+  def puede_excluir?(desde, hasta)
+    clon = self.clone
+    clon.excluir(desde, hasta)
+    clon.es_valido?
+  end
+
+  def es_valido?
+    !@ciudades.any? { |ciudad| (@restricciones[ciudad].count(1) > 2) || (@restricciones[ciudad].count(-1) > (@cantidad_de_ciudades-2)) }
   end
 
   private
@@ -95,6 +105,12 @@ class RestriccionesTSP
     incluir_ejes_que_deben_estar_si_o_si_en_el_tour
   end
 
+  def chequear_validez
+    if es_valido?
+      raise ' la bardeaste'
+    end
+  end
+
   def realizar_inferencias_de_exclusion
     incluir_ejes_que_deben_estar_si_o_si_en_el_tour
     evitar_ciclos_prematuros
@@ -107,9 +123,12 @@ class RestriccionesTSP
       if (ceros == 2 && unos == 0) || (ceros == 1 && unos == 1)
         @ciudades.each do |j|
           if @restricciones[i][j] == 0
-            @restricciones[i][j] = 1
-            @restricciones[j][i] = 1
-            @cantidad_de_inclusiones += 1
+
+            incluir(i, j) # inclusión puede disparar inferencias recursivamente
+
+            # @restricciones[i][j] = 1
+            # @restricciones[j][i] = 1
+            # @cantidad_de_inclusiones += 1
           end
         end
       end
