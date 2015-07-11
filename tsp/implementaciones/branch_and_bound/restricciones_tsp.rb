@@ -37,7 +37,6 @@ class RestriccionesTSP
   end
 
   def posible_proxima_restriccion
-    # TODO chequear si funciona en todos los casos
     @ciudades.each do |i|
       @ciudades.each do |j|
         return [i, j] if @restricciones[i][j] == 0
@@ -56,17 +55,13 @@ class RestriccionesTSP
   end
 
   def tour_completo
-    # TODO mejorar, está un poco feo
-    restricciones_temp = @restricciones.map(&:dup)
     ciudad_inicial = 0
     tour = [ciudad_inicial]
     ciudad_actual = ciudad_inicial
     while tour.length < @cantidad_de_ciudades
-      restricciones_temp[ciudad_actual].each_with_index do |e, i|
-        if e == 1
+      @restricciones[ciudad_actual].each_with_index do |e, i|
+        if e == 1 && !tour.include?(i)
           tour << i
-          restricciones_temp[ciudad_actual][i] = -1
-          restricciones_temp[i][ciudad_actual] = -1
           ciudad_actual = i
           break
         end
@@ -80,7 +75,7 @@ class RestriccionesTSP
     self.class.new @cantidad_de_ciudades,
                    @cantidad_de_inclusiones,
                    @cantidad_de_exclusiones,
-    @restricciones.map(&:clone)
+                   @restricciones.map(&:clone)
   end
 
   def puede_excluir?(desde, hasta)
@@ -90,7 +85,9 @@ class RestriccionesTSP
   end
 
   def es_valido?
-    !@ciudades.any? { |ciudad| (@restricciones[ciudad].count(1) > 2) || (@restricciones[ciudad].count(-1) > (@cantidad_de_ciudades-2)) }
+    !@ciudades.any? do |ciudad|
+      (@restricciones[ciudad].count(1) > 2) || (@restricciones[ciudad].count(-1) > (@cantidad_de_ciudades-2))
+    end
   end
 
   private
@@ -105,12 +102,6 @@ class RestriccionesTSP
     incluir_ejes_que_deben_estar_si_o_si_en_el_tour
   end
 
-  def chequear_validez
-    if es_valido?
-      raise ' la bardeaste'
-    end
-  end
-
   def realizar_inferencias_de_exclusion
     incluir_ejes_que_deben_estar_si_o_si_en_el_tour
     evitar_ciclos_prematuros
@@ -122,14 +113,7 @@ class RestriccionesTSP
       unos = @restricciones[i].count(1)
       if (ceros == 2 && unos == 0) || (ceros == 1 && unos == 1)
         @ciudades.each do |j|
-          if @restricciones[i][j] == 0
-
-            incluir(i, j) # inclusión puede disparar inferencias recursivamente
-
-            # @restricciones[i][j] = 1
-            # @restricciones[j][i] = 1
-            # @cantidad_de_inclusiones += 1
-          end
+          incluir(i, j) if @restricciones[i][j] == 0
         end
       end
     end
@@ -156,7 +140,7 @@ class RestriccionesTSP
 
   def mantener_siempre_2_ejes_incidentes_por_cada_vertice
     @ciudades.each do |i|
-      if @restricciones[i].count(1) == 2 # dos adyacentes
+      if @restricciones[i].count(1) == 2
         @ciudades.each do |j|
           if @restricciones[i][j] == 0
             @restricciones[i][j] = -1
