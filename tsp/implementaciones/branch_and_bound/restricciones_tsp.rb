@@ -1,12 +1,11 @@
 class RestriccionesTSP
 
-  attr_reader :cantidad_de_inclusiones, :cantidad_de_exclusiones, :restricciones
+  attr_reader :restricciones
 
-  def initialize(ciudades, inclusiones=0, exclusiones=0, restricciones=nil)
+  def initialize(ciudades, inclusiones=nil, restricciones=nil)
     @cantidad_de_ciudades = ciudades
     @ciudades = 0..@cantidad_de_ciudades-1
-    @cantidad_de_inclusiones = inclusiones
-    @cantidad_de_exclusiones = exclusiones
+    @inclusiones = inclusiones || [0] * @cantidad_de_ciudades
     @restricciones = restricciones || inicializar_matriz_de_restricciones
   end
 
@@ -25,15 +24,15 @@ class RestriccionesTSP
   def incluir(desde, hasta)
     @restricciones[desde][hasta] = 1
     @restricciones[hasta][desde] = 1
+    @inclusiones[desde] = @inclusiones[desde] + 1
+    @inclusiones[hasta] = @inclusiones[hasta] + 1
     realizar_inferencias_de_inclusion
-    @cantidad_de_inclusiones += 1
   end
 
   def excluir(desde, hasta)
     @restricciones[desde][hasta] = -1
     @restricciones[hasta][desde] = -1
     realizar_inferencias_de_exclusion
-    @cantidad_de_exclusiones += 1
   end
 
   def posible_proxima_restriccion
@@ -47,11 +46,11 @@ class RestriccionesTSP
   end
 
   def hay_tour_completo?
-    @ciudades.all? { |ciudad| @restricciones[ciudad].count(1) == 2 }
+    @ciudades.all? { |ciudad| @inclusiones[ciudad] == 2 }
   end
 
   def no_hay_tour_completo?
-    @ciudades.any? { |ciudad| @restricciones[ciudad].count(1) != 2 }
+    @ciudades.any? { |ciudad| @inclusiones[ciudad] < 2 }
   end
 
   def tour_completo
@@ -72,10 +71,7 @@ class RestriccionesTSP
   end
 
   def clone
-    self.class.new @cantidad_de_ciudades,
-                   @cantidad_de_inclusiones,
-                   @cantidad_de_exclusiones,
-                   @restricciones.map(&:clone)
+    self.class.new @cantidad_de_ciudades, @inclusiones.clone, @restricciones.map(&:clone)
   end
 
   def puede_excluir?(desde, hasta)
@@ -86,7 +82,7 @@ class RestriccionesTSP
 
   def es_valido?
     !@ciudades.any? do |ciudad|
-      (@restricciones[ciudad].count(1) > 2) || (@restricciones[ciudad].count(-1) > (@cantidad_de_ciudades-2))
+      (@inclusiones[ciudad] > 2) || (@restricciones[ciudad].count(-1) > (@cantidad_de_ciudades-2))
     end
   end
 
@@ -104,13 +100,12 @@ class RestriccionesTSP
 
   def realizar_inferencias_de_exclusion
     incluir_ejes_que_deben_estar_si_o_si_en_el_tour
-    evitar_ciclos_prematuros
   end
 
   def incluir_ejes_que_deben_estar_si_o_si_en_el_tour
     for i in @ciudades
       ceros = @restricciones[i].count(0)
-      unos = @restricciones[i].count(1)
+      unos = @inclusiones[i]
       if (ceros == 2 && unos == 0) || (ceros == 1 && unos == 1)
         for j in @ciudades
           incluir(i, j) if @restricciones[i][j] == 0
@@ -120,19 +115,25 @@ class RestriccionesTSP
   end
 
   def evitar_ciclos_prematuros
-    for i in @ciudades
-      for j in @ciudades
+    cities = @ciudades.select { |c| @inclusiones[c] == 1 }
+
+    cities.each do |i|
+      cities.delete i
+      cities.each do |j|
         if @restricciones[i][j] == 0
           @restricciones[i][j] = 1
           @restricciones[j][i] = 1
+          @inclusiones[i] = @inclusiones[i] + 1
+          @inclusiones[j] = @inclusiones[j] + 1
           if no_hay_tour_completo? && hay_ciclo?(@restricciones)
             @restricciones[i][j] = -1
             @restricciones[j][i] = -1
-            @cantidad_de_exclusiones += 1
           else
             @restricciones[i][j] = 0
             @restricciones[j][i] = 0
           end
+          @inclusiones[i] = @inclusiones[i] - 1
+          @inclusiones[j] = @inclusiones[j] - 1
         end
       end
     end
@@ -140,12 +141,11 @@ class RestriccionesTSP
 
   def mantener_siempre_2_ejes_incidentes_por_cada_vertice
     for i in @ciudades
-      if @restricciones[i].count(1) == 2
+      if @inclusiones[i] == 2
         for j in @ciudades
           if @restricciones[i][j] == 0
             @restricciones[i][j] = -1
             @restricciones[j][i] = -1
-            @cantidad_de_exclusiones += 1
           end
         end
       end

@@ -1,17 +1,16 @@
 require_relative 'ejemplos/ejemplos'
 require 'benchmark'
 
+ejemplo = 11
+bb = BranchAndBoundTSP.new(ejemplo, matriz_de_distancias(ejemplo))
+sol = bb.resolver
+puts sol.to_s
+
 # ejemplo = 6
 # bb = BranchAndBoundTSP.new(ejemplo, matriz_de_distancias(ejemplo))
 # sol = nil
-# sol = bb.resolver
+# puts Benchmark.measure { sol = bb.resolver }
 # puts sol.to_s
-
-ejemplo = 16
-bb = BranchAndBoundTSP.new(ejemplo, matriz_de_distancias(ejemplo))
-sol = nil
-puts Benchmark.measure { sol = bb.resolver }
-puts sol.to_s
 
 # Generar matriz desde TSPLIB xml
 #
