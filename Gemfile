@@ -3,6 +3,7 @@ source 'https://rubygems.org'
 ruby '2.2.2'
 
 gem 'rspec'
+gem 'nokogiri'
 gem 'awesome_print'
 
 if ENV['RM_INFO']

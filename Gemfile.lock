@@ -6,6 +6,9 @@ GEM
       debase-ruby_core_source
     debase-ruby_core_source (0.7.5)
     diff-lcs (1.2.5)
+    mini_portile (0.6.2)
+    nokogiri (1.6.6.2)
+      mini_portile (~> 0.6.0)
     rake (10.4.2)
     rspec (3.1.0)
       rspec-core (~> 3.1.0)
@@ -28,6 +31,7 @@ PLATFORMS
 DEPENDENCIES
   awesome_print
   debase
+  nokogiri
   rspec
   ruby-debug-ide
 
