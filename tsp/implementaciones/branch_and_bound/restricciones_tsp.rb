@@ -26,7 +26,7 @@ class RestriccionesTSP
     @restricciones[hasta][desde] = 1
     @inclusiones[desde] = @inclusiones[desde] + 1
     @inclusiones[hasta] = @inclusiones[hasta] + 1
-    realizar_inferencias_de_inclusion
+    realizar_inferencias_de_inclusion(desde, hasta)
   end
 
   def excluir(desde, hasta)
@@ -92,8 +92,9 @@ class RestriccionesTSP
     @ciudades.map { |i| @ciudades.map { |j| i != j ? 0 : -1 } }
   end
 
-  def realizar_inferencias_de_inclusion
-    mantener_siempre_2_ejes_incidentes_por_cada_vertice
+  def realizar_inferencias_de_inclusion(desde, hasta)
+    mantener_solo_dos_caminos_posibles(desde)
+    mantener_solo_dos_caminos_posibles(hasta)
     evitar_ciclos_prematuros
     incluir_ejes_que_deben_estar_si_o_si_en_el_tour
   end
@@ -139,14 +140,12 @@ class RestriccionesTSP
     end
   end
 
-  def mantener_siempre_2_ejes_incidentes_por_cada_vertice
-    for i in @ciudades
-      if @inclusiones[i] == 2
-        for j in @ciudades
-          if @restricciones[i][j] == 0
-            @restricciones[i][j] = -1
-            @restricciones[j][i] = -1
-          end
+  def mantener_solo_dos_caminos_posibles(ciudad)
+    if @inclusiones[ciudad] == 2
+      for otra_ciudad in @ciudades
+        if @restricciones[ciudad][otra_ciudad] == 0
+          @restricciones[ciudad][otra_ciudad] = -1
+          @restricciones[otra_ciudad][ciudad] = -1
         end
       end
     end
