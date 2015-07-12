@@ -24,6 +24,13 @@ def hay_ciclo?(gm)
   false
 end
 
+def hay_ciclo_comenzando_por(gm, i)
+  # gm denota un grafo implementado con una matriz de adyacencias
+  vs = [false] * gm.length # inicializar vector de visitados
+  vs[i] = true       # visitado
+  hay_ciclo_en_contexto(gm, i, i, vs)
+end
+
 def hay_ciclo_en_contexto(gm, s, p, vs)
   # detecta un ciclo en un grafo comenzando por un vértice s,
   # viniendo de un vértice p. teniendo en cuenta ciertos nodos

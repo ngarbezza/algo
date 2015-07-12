@@ -126,7 +126,7 @@ class RestriccionesTSP
           @restricciones[j][i] = 1
           @inclusiones[i] = @inclusiones[i] + 1
           @inclusiones[j] = @inclusiones[j] + 1
-          if no_hay_tour_completo? && hay_ciclo?(@restricciones)
+          if hay_ciclo_comenzando_por(@restricciones, i) && no_hay_tour_completo?
             @restricciones[i][j] = -1
             @restricciones[j][i] = -1
           else
