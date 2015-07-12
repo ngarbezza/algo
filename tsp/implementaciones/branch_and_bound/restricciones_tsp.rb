@@ -2,10 +2,11 @@ class RestriccionesTSP
 
   attr_reader :restricciones
 
-  def initialize(ciudades, inclusiones=nil, restricciones=nil)
+  def initialize(ciudades, inclusiones=nil, restricciones=nil, cantidad_de_inclusiones=0)
     @cantidad_de_ciudades = ciudades
     @ciudades = 0..@cantidad_de_ciudades-1
     @inclusiones = inclusiones || [0] * @cantidad_de_ciudades
+    @cantidad_de_inclusiones = cantidad_de_inclusiones
     @restricciones = restricciones || inicializar_matriz_de_restricciones
   end
 
@@ -26,6 +27,7 @@ class RestriccionesTSP
     @restricciones[hasta][desde] = 1
     @inclusiones[desde] = @inclusiones[desde] + 1
     @inclusiones[hasta] = @inclusiones[hasta] + 1
+    @cantidad_de_inclusiones += 1
     realizar_inferencias_de_inclusion(desde, hasta)
   end
 
@@ -46,11 +48,11 @@ class RestriccionesTSP
   end
 
   def hay_tour_completo?
-    @ciudades.all? { |ciudad| @inclusiones[ciudad] == 2 }
+    @cantidad_de_inclusiones == @cantidad_de_ciudades
   end
 
   def no_hay_tour_completo?
-    @ciudades.any? { |ciudad| @inclusiones[ciudad] < 2 }
+    @cantidad_de_inclusiones < @cantidad_de_ciudades
   end
 
   def tour_completo
@@ -71,7 +73,7 @@ class RestriccionesTSP
   end
 
   def clone
-    self.class.new @cantidad_de_ciudades, @inclusiones.clone, @restricciones.map(&:clone)
+    self.class.new @cantidad_de_ciudades, @inclusiones.clone, @restricciones.map(&:clone), @cantidad_de_inclusiones
   end
 
   def puede_excluir?(desde, hasta)
@@ -124,6 +126,7 @@ class RestriccionesTSP
         if @restricciones[i][j] == 0
           @restricciones[i][j] = 1
           @restricciones[j][i] = 1
+          @cantidad_de_inclusiones += 1
           @inclusiones[i] = @inclusiones[i] + 1
           @inclusiones[j] = @inclusiones[j] + 1
           if hay_ciclo_comenzando_por(@restricciones, i) && no_hay_tour_completo?
@@ -135,6 +138,7 @@ class RestriccionesTSP
           end
           @inclusiones[i] = @inclusiones[i] - 1
           @inclusiones[j] = @inclusiones[j] - 1
+          @cantidad_de_inclusiones -= 1
         end
       end
     end
