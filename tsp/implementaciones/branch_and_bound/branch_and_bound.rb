@@ -25,7 +25,13 @@ class BranchAndBoundTSP
       segundo_eje_elegido_por_ser_minimo = true
 
       for j in @ciudades
-        if restricciones.tiene_que_estar?(i, j)
+        if i == j
+          #nada que hacer
+        elsif !primer_eje_elegido_por_ser_minimo && !segundo_eje_elegido_por_ser_minimo
+          # nada que hacer
+        elsif restricciones.no_tiene_que_estar?(i, j)
+          # nada que hacer
+        elsif restricciones.tiene_que_estar?(i, j)
           if primer_eje_elegido_por_ser_minimo
             segundo_eje_elegido = primer_eje_elegido # lo muevo de lugar para que entre el que tiene que estar sí o sí
             primer_eje_elegido = costo_en_llegar_a(i, j, @distancias)
@@ -36,18 +42,12 @@ class BranchAndBoundTSP
           else
             raise 'error en las definiciones de restricciones del TSP: no puede haber más de 2 ejes incidentes a un mismo vértice'
           end
-        elsif i == j
-          # nada que hacer
-        elsif restricciones.no_tiene_que_estar?(i, j)
-          # nada que hacer
-        elsif !primer_eje_elegido_por_ser_minimo && !segundo_eje_elegido_por_ser_minimo
-          # nada que hacer
         else
           current = costo_en_llegar_a(i, j, @distancias)
-          if current < primer_eje_elegido && primer_eje_elegido_por_ser_minimo
+          if primer_eje_elegido_por_ser_minimo && current < primer_eje_elegido
             segundo_eje_elegido = primer_eje_elegido
             primer_eje_elegido = current
-          elsif current < segundo_eje_elegido && segundo_eje_elegido_por_ser_minimo
+          elsif segundo_eje_elegido_por_ser_minimo && current < segundo_eje_elegido
             segundo_eje_elegido = current
           end
         end

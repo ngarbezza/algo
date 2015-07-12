@@ -60,8 +60,8 @@ class RestriccionesTSP
     tour = [ciudad_inicial]
     ciudad_actual = ciudad_inicial
     while tour.length < @cantidad_de_ciudades
-      @restricciones[ciudad_actual].each_with_index do |e, i|
-        if e == 1 && !tour.include?(i)
+      for i in @ciudades
+        if @restricciones[ciudad_actual][i] == 1 && !tour.include?(i)
           tour << i
           ciudad_actual = i
           break
