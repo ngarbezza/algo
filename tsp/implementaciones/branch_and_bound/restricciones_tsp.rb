@@ -44,24 +44,17 @@ class RestriccionesTSP
     @restricciones[hasta][desde] = 0
   end
 
-  def posible_proxima_restriccion(extremo, visitados, ultimo_paso)
-    for i in @ciudades
-      ya_visitado = visitados.include?(i)
+  def posible_proxima_restriccion(visitados, ultimo_paso)
+    extremo = visitados.last
+    for ciudad in @ciudades
+      ya_visitado = visitados.include?(ciudad)
       termina_el_ciclo = ultimo_paso && visitados.include?(0)
-      if @restricciones[extremo][i] == 0 && (!ya_visitado || termina_el_ciclo)
-        return [extremo, i]
+      if @restricciones[extremo][ciudad] == 0 && (!ya_visitado || termina_el_ciclo)
+        return ciudad
       end
     end
 
     false
-  end
-
-  def hay_tour_completo?
-    @cantidad_de_inclusiones == @cantidad_de_ciudades
-  end
-
-  def no_hay_tour_completo?
-    @cantidad_de_inclusiones < @cantidad_de_ciudades
   end
 
   def clone

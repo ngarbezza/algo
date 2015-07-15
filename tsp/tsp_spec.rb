@@ -103,8 +103,6 @@ describe 'TSP' do
 
     describe 'cálculo de cota superior' do
 
-      # TODO: heurística floja (impone restricciones al azar sin siquiera ver el costo)
-
       it 'sin ninguna restricción' do
         resultado = branch_and_bound.cota_superior(restricciones)
 
@@ -308,24 +306,36 @@ describe 'TSP' do
 
     describe 'tour completo' do
 
-      it 'no hay tour completo si no hay suficientes restricciones para determinarlo' do
-        restricciones.incluir(0, 2)
-        restricciones.incluir(0, 4)
-        restricciones.excluir(0, 1)
-        restricciones.excluir(0, 3)
+      it 'no hay tour completo si no están todas las ciudades' do
+        sin_padre = nil
+        tour = [0, 2, 1]
+        distancia = 10
+        nodo = NodoTSP.new sin_padre, restricciones, tour, distancia
 
-        expect(restricciones.hay_tour_completo?).to eq(false)
+        expect(nodo.hay_tour_completo?).to be false
+        expect(nodo.no_hay_tour_completo?).to be true
       end
 
-      it 'hay tour completo si hay suficientes restricciones para determinarlo' do
-        restricciones.incluir(0, 1)
-        restricciones.incluir(1, 4)
-        restricciones.incluir(4, 2)
-        restricciones.incluir(2, 3)
-        restricciones.incluir(3, 0)
+      it 'hay tour completo si están todas las ciudades, y la inicial está dos veces' do
+        sin_padre = nil
+        tour = [0, 2, 1, 3, 4, 0]
+        distancia = 10
+        nodo = NodoTSP.new sin_padre, restricciones, tour, distancia
 
-        expect(restricciones.hay_tour_completo?).to eq(true)
-        expect(restricciones.tour_completo).to eq([0, 1, 4, 2, 3, 0])
+        expect(nodo.hay_tour_completo?).to be true
+        expect(nodo.no_hay_tour_completo?).to be false
+        expect(nodo.tour_completo).to eq tour
+      end
+
+      it 'hay tour completo si hay n ciudades sin importar si se repiten o no está la inicial al final (no chequea validez)' do
+        sin_padre = nil
+        tour = [2, 2, 2, 3, 4, 1]
+        distancia = 10
+        nodo = NodoTSP.new sin_padre, restricciones, tour, distancia
+
+        expect(nodo.hay_tour_completo?).to be true
+        expect(nodo.no_hay_tour_completo?).to be false
+        expect(nodo.tour_completo).to eq tour
       end
 
     end

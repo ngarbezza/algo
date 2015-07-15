@@ -16,8 +16,9 @@ class BranchAndBoundTSP
 
   ### COTA INFERIOR
 
-  def cota_inferior(restricciones)
+  def cota_inferior(nodo)
     total = 0
+    restricciones = nodo.restricciones
     for i in @ciudades
       primer_eje_elegido = Float::INFINITY
       primer_eje_elegido_por_ser_minimo = true
@@ -61,24 +62,36 @@ class BranchAndBoundTSP
 
   ### COTA SUPERIOR
 
-  def cota_superior(restricciones)
-    # copia_de_restricciones = restricciones.clone
-    # until copia_de_restricciones.hay_tour_completo?
-    #   restriccion_al_azar = copia_de_restricciones.posible_proxima_restriccion
-    #   copia_de_restricciones.incluir restriccion_al_azar[0], restriccion_al_azar[1]
-    # end
-    #
-    # tour = copia_de_restricciones.tour_completo
-    # [tour, distancia_para_recorrer(tour)]
-    [[], Float::INFINITY]
-  end
-
-  def distancia_para_recorrer(tour)
-    distancia = costo_en_llegar_a(0, tour.last, @distancias)
-    for i in (1..tour.length-1)
-      distancia += costo_en_llegar_a(tour[i], tour[i-1], @distancias)
+  def cota_superior(nodo)
+    tour = nodo.tour_actual.clone
+    distancia = nodo.distancia_actual
+    actual = tour.last
+    until tour.length == @cantidad_de_ciudades
+      min = Float::INFINITY
+      proxima = nil
+      for ciudad in @ciudades
+        unless tour.include?(ciudad)
+          unless nodo.restricciones.no_tiene_que_estar?(actual, ciudad)
+            costo_actual = costo_en_llegar_a(ciudad, actual, @distancias)
+            if costo_actual < min
+              min = costo_actual
+              proxima = ciudad
+            end
+          end
+        end
+      end
+      if proxima.nil?
+        return false # no puedo armar un tour a causa de que realicé muchas exclusiones
+      end
+      distancia += min
+      tour << proxima
+      actual = proxima
     end
-    distancia
+    # incluir la ciudad inicial para terminar el tour
+    distancia += costo_en_llegar_a(0, tour.last, @distancias)
+    tour << 0
+
+    [tour, distancia]
   end
 
   def resolver
@@ -101,29 +114,36 @@ class BranchAndBoundTSP
     nueva_restriccion = nodo.posible_proxima_restriccion
     return if !nueva_restriccion
 
-    if nodo.puede_incluir? nueva_restriccion[0], nueva_restriccion[1]
+    puedo_ir_a_la_izquierda = nodo.puede_incluir_al_tour? nueva_restriccion
+    if puedo_ir_a_la_izquierda
       restricciones_rama_izquierda = nodo.restricciones.clone
-      restricciones_rama_izquierda.incluir nueva_restriccion[0], nueva_restriccion[1]
-      cadena_izquierda = {
-          extremo: nueva_restriccion[1],
-          visitados: (nodo.cadena[:visitados] + [nodo.cadena[:extremo]]),
-          peso: (nodo.cadena[:peso] + costo_en_llegar_a(nueva_restriccion[1], nodo.cadena[:extremo], @distancias))
-      }
-      rama_izquierda = NodoTSP.new nodo, restricciones_rama_izquierda, cadena_izquierda
-      nodo.hijo_izquierdo = rama_izquierda
-      @total_nodos += 1
-      calcular_cotas_para(rama_izquierda)
-      @nodos.unshift rama_izquierda
+      restricciones_rama_izquierda.incluir nodo.extremo, nueva_restriccion
+      nuevo_tour = nodo.tour_actual + [nueva_restriccion]
+      nueva_distancia = nodo.distancia_actual + costo_en_llegar_a(nueva_restriccion, nodo.extremo, @distancias)
+      rama_izquierda = NodoTSP.new nodo, restricciones_rama_izquierda, nuevo_tour, nueva_distancia
+      resultado_cotas = calcular_cotas_para(rama_izquierda)
+      if resultado_cotas
+        nodo.hijo_izquierdo = rama_izquierda
+        @total_nodos += 1
+        @nodos.unshift rama_izquierda
+      else
+        # no pude calcular la cota, no considero este nodo
+      end
     end
 
-    if nodo.puede_excluir? nueva_restriccion[0], nueva_restriccion[1]
+    puedo_ir_a_la_derecha = nodo.puede_excluir_del_tour? nueva_restriccion
+    if puedo_ir_a_la_derecha
       restricciones_rama_derecha = nodo.restricciones.clone
-      restricciones_rama_derecha.excluir nueva_restriccion[0], nueva_restriccion[1]
-      rama_derecha = NodoTSP.new nodo, restricciones_rama_derecha, nodo.cadena
-      nodo.hijo_derecho = rama_derecha
-      @total_nodos += 1
-      calcular_cotas_para(rama_derecha)
-      @nodos.unshift rama_derecha
+      restricciones_rama_derecha.excluir nodo.extremo, nueva_restriccion
+      rama_derecha = NodoTSP.new nodo, restricciones_rama_derecha, nodo.tour_actual, nodo.distancia_actual
+      resultado_cotas = calcular_cotas_para(rama_derecha)
+      if resultado_cotas
+        nodo.hijo_derecho = rama_derecha
+        @total_nodos += 1
+        @nodos.unshift rama_derecha
+      else
+        # no pude calcular la cota, no considero este nodo
+      end
     end
   end
 
@@ -145,38 +165,58 @@ class BranchAndBoundTSP
   end
 
   def nodo_inicial
-    NodoTSP.new nil, RestriccionesTSP.new(@cantidad_de_ciudades), {extremo: 0, visitados: [], peso: 0}
+    sin_padre = nil
+    restricciones = RestriccionesTSP.new(@cantidad_de_ciudades)
+    ciudad_inicial = 0
+    tour_inicial = [ciudad_inicial]
+    distancia_inicial = 0
+    NodoTSP.new sin_padre, restricciones, tour_inicial, distancia_inicial
   end
 
   def calcular_cotas_para(nodo)
-    nodo.cota_inferior = cota_inferior(nodo.restricciones)
-    nodo.cota_superior = cota_superior(nodo.restricciones)
+    cota_superior_resultado = cota_superior(nodo)
+    return false unless cota_superior_resultado
+    nodo.cota_superior = cota_superior_resultado
+    nodo.cota_inferior = cota_inferior(nodo)
 
     propagar_informacion_de_cotas(nodo)
+    true
   end
 
   def propagar_informacion_de_cotas(nodo)
+    # TODO: testear, hay varios casos
+
     if nodo.cota_superior[1] < @mejor_cota_superior
       @mejor_cota_superior = nodo.cota_superior[1]
       @solucion = nodo.cota_superior
     end
 
     if nodo.hay_tour_completo?
+      #cota superior e inferior deberían coincidir
+      if nodo.cota_superior != nodo.cota_inferior
+        raise 'xxx'
+      end
+
       if @mejor_cota_inferior_es_de_tour_completo
         if nodo.cota_inferior < @mejor_cota_inferior
           @mejor_cota_inferior = nodo.cota_inferior
-          @solucion = [nodo.tour_completo, @mejor_cota_inferior]
+          @solucion = nodo.cota_superior
         end
       else
         @mejor_cota_inferior_es_de_tour_completo = true
         @mejor_cota_inferior = nodo.cota_inferior
-        @solucion = [nodo.tour_completo, @mejor_cota_inferior]
+        @solucion = nodo.cota_superior
       end
     else
       if !@mejor_cota_inferior_es_de_tour_completo && nodo.cota_inferior > @mejor_cota_inferior
         @mejor_cota_inferior = nodo.cota_inferior
       end
     end
+
+    if @mejor_cota_superior < @mejor_cota_inferior
+      @mejor_cota_inferior = @mejor_cota_superior
+    end
+
   end
 
   def podar(nodo)
@@ -193,7 +233,10 @@ class BranchAndBoundTSP
   end
 
   def puede_ser_podado?(nodo)
-    nodo.cota_inferior > @mejor_cota_superior || (@mejor_cota_inferior_es_de_tour_completo && @mejor_cota_inferior < nodo.cota_inferior)
+    cota_solucion = @mejor_cota_inferior_es_de_tour_completo ? @mejor_cota_inferior : @mejor_cota_superior
+    nodo_no_puede_alcanzar_una_mejor_cota = nodo.cota_inferior > cota_solucion
+    cotas_son_iguales = nodo.cota_inferior == nodo.cota_superior
+    nodo_no_puede_alcanzar_una_mejor_cota || cotas_son_iguales
   end
 
 end
