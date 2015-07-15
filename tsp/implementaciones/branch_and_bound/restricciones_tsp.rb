@@ -1,6 +1,6 @@
 class RestriccionesTSP
 
-  attr_reader :restricciones
+  attr_reader :restricciones, :cantidad_de_ciudades
 
   def initialize(ciudades, inclusiones=nil, restricciones=nil, cantidad_de_inclusiones=0)
     @cantidad_de_ciudades = ciudades
@@ -18,33 +18,42 @@ class RestriccionesTSP
     @restricciones[desde][hasta] == -1 || @restricciones[hasta][desde] == -1
   end
 
-  def da_lo_mismo_que_este?(desde, hasta)
-    @restricciones[desde][hasta] == 0 || @restricciones[hasta][desde] == 0
-  end
-
   def incluir(desde, hasta)
     @restricciones[desde][hasta] = 1
     @restricciones[hasta][desde] = 1
     @inclusiones[desde] = @inclusiones[desde] + 1
     @inclusiones[hasta] = @inclusiones[hasta] + 1
     @cantidad_de_inclusiones += 1
-    realizar_inferencias_de_inclusion(desde, hasta)
+  end
+
+  def desincluir(desde, hasta)
+    @restricciones[desde][hasta] = 0
+    @restricciones[hasta][desde] = 0
+    @inclusiones[desde] = @inclusiones[desde] - 1
+    @inclusiones[hasta] = @inclusiones[hasta] - 1
+    @cantidad_de_inclusiones -= 1
   end
 
   def excluir(desde, hasta)
     @restricciones[desde][hasta] = -1
     @restricciones[hasta][desde] = -1
-    realizar_inferencias_de_exclusion
   end
 
-  def posible_proxima_restriccion
+  def desexcluir(desde, hasta)
+    @restricciones[desde][hasta] = 0
+    @restricciones[hasta][desde] = 0
+  end
+
+  def posible_proxima_restriccion(extremo, visitados, ultimo_paso)
     for i in @ciudades
-      for j in @ciudades
-        return [i, j] if @restricciones[i][j] == 0
+      ya_visitado = visitados.include?(i)
+      termina_el_ciclo = ultimo_paso && visitados.include?(0)
+      if @restricciones[extremo][i] == 0 && (!ya_visitado || termina_el_ciclo)
+        return [extremo, i]
       end
     end
 
-    raise 'ya existen todas las restricciones posibles'
+    false
   end
 
   def hay_tour_completo?
@@ -55,31 +64,22 @@ class RestriccionesTSP
     @cantidad_de_inclusiones < @cantidad_de_ciudades
   end
 
-  def tour_completo
-    ciudad_inicial = 0
-    tour = [ciudad_inicial]
-    ciudad_actual = ciudad_inicial
-    while tour.length < @cantidad_de_ciudades
-      for i in @ciudades
-        if @restricciones[ciudad_actual][i] == 1 && !tour.include?(i)
-          tour << i
-          ciudad_actual = i
-          break
-        end
-      end
-    end
-    tour << ciudad_inicial
-    tour
-  end
-
   def clone
     self.class.new @cantidad_de_ciudades, @inclusiones.clone, @restricciones.map(&:clone), @cantidad_de_inclusiones
   end
 
   def puede_excluir?(desde, hasta)
-    clon = self.clone
-    clon.excluir(desde, hasta)
-    clon.es_valido?
+    excluir(desde, hasta)
+    valido = es_valido?
+    desexcluir(desde, hasta)
+    valido
+  end
+
+  def puede_incluir?(desde, hasta)
+    incluir(desde, hasta)
+    valido = es_valido?
+    desincluir(desde, hasta)
+    valido
   end
 
   def es_valido?
@@ -92,67 +92,6 @@ class RestriccionesTSP
 
   def inicializar_matriz_de_restricciones
     @ciudades.map { |i| @ciudades.map { |j| i != j ? 0 : -1 } }
-  end
-
-  def realizar_inferencias_de_inclusion(desde, hasta)
-    mantener_solo_dos_caminos_posibles(desde)
-    mantener_solo_dos_caminos_posibles(hasta)
-    evitar_ciclos_prematuros
-    incluir_ejes_que_deben_estar_si_o_si_en_el_tour
-  end
-
-  def realizar_inferencias_de_exclusion
-    incluir_ejes_que_deben_estar_si_o_si_en_el_tour
-  end
-
-  def incluir_ejes_que_deben_estar_si_o_si_en_el_tour
-    for i in @ciudades
-      ceros = @restricciones[i].count(0)
-      unos = @inclusiones[i]
-      if (ceros == 2 && unos == 0) || (ceros == 1 && unos == 1)
-        for j in @ciudades
-          incluir(i, j) if @restricciones[i][j] == 0
-        end
-      end
-    end
-  end
-
-  def evitar_ciclos_prematuros
-    cities = @ciudades.select { |c| @inclusiones[c] == 1 }
-
-    cities.each do |i|
-      cities.delete i
-      cities.each do |j|
-        if @restricciones[i][j] == 0
-          @restricciones[i][j] = 1
-          @restricciones[j][i] = 1
-          @cantidad_de_inclusiones += 1
-          @inclusiones[i] = @inclusiones[i] + 1
-          @inclusiones[j] = @inclusiones[j] + 1
-          if hay_ciclo_comenzando_por(@restricciones, i) && no_hay_tour_completo?
-            @restricciones[i][j] = -1
-            @restricciones[j][i] = -1
-          else
-            @restricciones[i][j] = 0
-            @restricciones[j][i] = 0
-          end
-          @inclusiones[i] = @inclusiones[i] - 1
-          @inclusiones[j] = @inclusiones[j] - 1
-          @cantidad_de_inclusiones -= 1
-        end
-      end
-    end
-  end
-
-  def mantener_solo_dos_caminos_posibles(ciudad)
-    if @inclusiones[ciudad] == 2
-      for otra_ciudad in @ciudades
-        if @restricciones[ciudad][otra_ciudad] == 0
-          @restricciones[ciudad][otra_ciudad] = -1
-          @restricciones[otra_ciudad][ciudad] = -1
-        end
-      end
-    end
   end
 
 end
