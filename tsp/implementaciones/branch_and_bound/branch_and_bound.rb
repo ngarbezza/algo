@@ -60,6 +60,30 @@ class BranchAndBoundTSP
     total.fdiv(2)
   end
 
+  def cota_inferior_hungara(nodo)
+    matriz = []
+    @ciudades.each do |i|
+      matriz << []
+      @ciudades.each do |j|
+        if i == j || nodo.restricciones.no_tiene_que_estar?(i, j)
+          matriz[i][j] = Float::INFINITY # así no lo elige nunca
+        elsif nodo.restricciones.tiene_que_estar?(i, j)
+          matriz[i][j] = -1 # así lo elige siempre
+        else
+          matriz[i][j] = costo_en_llegar_a(i, j, @distancias)
+        end
+      end
+    end
+    p matriz
+    m = HungarianAlgorithm.new(matriz.map(&:clone))
+    resultado = m.find_pairings
+    dist = 0
+    resultado.each do |pair|
+      dist += costo_en_llegar_a(pair[0], pair[1], @distancias)
+    end
+    dist
+  end
+
   ### COTA SUPERIOR
 
   def cota_superior(nodo)
@@ -177,7 +201,8 @@ class BranchAndBoundTSP
     cota_superior_resultado = cota_superior(nodo)
     return false unless cota_superior_resultado
     nodo.cota_superior = cota_superior_resultado
-    nodo.cota_inferior = cota_inferior(nodo)
+    # nodo.cota_inferior = cota_inferior(nodo) # 55608, 18s
+    nodo.cota_inferior = cota_inferior_hungara(nodo) # 15102, 20s
 
     propagar_informacion_de_cotas(nodo)
     true
@@ -191,11 +216,7 @@ class BranchAndBoundTSP
       @solucion = nodo.cota_superior
     end
 
-    if nodo.hay_tour_completo?
-      #cota superior e inferior deberían coincidir
-      if nodo.cota_superior != nodo.cota_inferior
-        raise 'xxx'
-      end
+    if nodo.hay_tour_completo? #cota superior e inferior deberían coincidir
 
       if @mejor_cota_inferior_es_de_tour_completo
         if nodo.cota_inferior < @mejor_cota_inferior
