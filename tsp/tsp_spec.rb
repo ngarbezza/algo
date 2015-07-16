@@ -365,6 +365,75 @@ describe 'TSP' do
 
     end
 
+    describe 'propagación de cotas' do
+
+      context 'cuando hay una solución de tour completo' do
+
+        context 'y ya había una solución de tour completo'
+
+        context 'y no había una solución de tour completo'
+
+      end
+
+      context 'cuando no hay una solución de tour completo' do
+
+        it 'actualiza la mejor cota superior'
+
+        it 'no actualiza la mejor cota superior'
+
+        it 'actualiza la mejor cota inferior'
+
+        it 'no actualiza la mejor cota inferior'
+
+      end
+
+    end
+
+    describe 'cálculo de cotas' do
+
+      it 'informa que no puede calcular la cota superior porque hay demasiadas exclusiones' do
+        nodo = branch_and_bound.nodo_inicial
+        nodo.restricciones.incluir(0, 3)
+        nodo.restricciones.incluir(3, 1)
+        nodo.restricciones.incluir(1, 4)
+        nodo.restricciones.excluir(0, 1)
+        nodo.restricciones.excluir(0, 2)
+        nodo.restricciones.excluir(1, 2)
+        # necesarios para mantener consistencia con las inclusiones de arriba
+        nodo.tour_actual = [0,3,1,4]
+        nodo.distancia_actual = 11
+        resultado = branch_and_bound.cota_superior(nodo)
+        expect(resultado).to be false
+      end
+
+      it 'informa que no puede calcular la cota superior porque hay demasiadas exclusiones (otro ejemplo)' do
+        nodo = branch_and_bound.nodo_inicial
+        nodo.restricciones.incluir(0, 1)
+        nodo.restricciones.incluir(1, 2)
+        nodo.restricciones.excluir(4, 0)
+        nodo.restricciones.excluir(4, 2)
+        # necesarios para mantener consistencia con las inclusiones de arriba
+        nodo.tour_actual = [0,1,2]
+        nodo.distancia_actual = 7
+        resultado = branch_and_bound.cota_superior(nodo)
+        expect(resultado).to be false
+      end
+
+      it 'calcula la cota superior cuando hay una restricción en el último eje para cerrar el ciclo' do
+        nodo = branch_and_bound.nodo_inicial
+        nodo.restricciones.incluir(0, 1)
+        nodo.restricciones.incluir(1, 2)
+        nodo.restricciones.excluir(4, 0)
+        # necesarios para mantener consistencia con las inclusiones de arriba
+        nodo.tour_actual = [0,1,2]
+        nodo.distancia_actual = 7
+        resultado = branch_and_bound.cota_superior(nodo)
+        expect(resultado[0]).to eq([0,1,2,4,3,0])
+        expect(resultado[1]).to eq(23)
+      end
+
+    end
+
   end
 
 end

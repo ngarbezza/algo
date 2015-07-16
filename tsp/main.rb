@@ -7,7 +7,7 @@ require 'benchmark'
 # sol = bb.resolver
 # puts sol.to_s
 
-ejemplo = 5
+ejemplo = 11
 bb = BranchAndBoundTSP.new(ejemplo, matriz_de_distancias(ejemplo))
 sol = nil
 puts Benchmark.measure { sol = bb.resolver }

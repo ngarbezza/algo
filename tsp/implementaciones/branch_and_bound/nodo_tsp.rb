@@ -1,7 +1,7 @@
 class NodoTSP
 
-  attr_reader :restricciones, :tour_actual, :distancia_actual
-  attr_accessor :hijo_izquierdo, :hijo_derecho, :cota_inferior, :cota_superior
+  attr_reader :restricciones
+  attr_accessor :hijo_izquierdo, :hijo_derecho, :cota_inferior, :cota_superior, :tour_actual, :distancia_actual
 
   def initialize(padre, restricciones, tour_actual, distancia_actual)
     @padre = padre

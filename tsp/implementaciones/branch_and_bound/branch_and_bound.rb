@@ -1,6 +1,7 @@
 require_relative '../aux'
 require_relative 'restricciones_tsp'
 require_relative 'nodo_tsp'
+require_relative '../hungarian'
 
 class BranchAndBoundTSP
 
@@ -74,8 +75,7 @@ class BranchAndBoundTSP
         end
       end
     end
-    p matriz
-    m = HungarianAlgorithm.new(matriz.map(&:clone))
+    m = HungarianAlgorithm.new(matriz)
     resultado = m.find_pairings
     dist = 0
     resultado.each do |pair|
@@ -90,30 +90,70 @@ class BranchAndBoundTSP
     tour = nodo.tour_actual.clone
     distancia = nodo.distancia_actual
     actual = tour.last
-    until tour.length == @cantidad_de_ciudades
-      min = Float::INFINITY
-      proxima = nil
-      for ciudad in @ciudades
-        unless tour.include?(ciudad)
-          unless nodo.restricciones.no_tiene_que_estar?(actual, ciudad)
-            costo_actual = costo_en_llegar_a(ciudad, actual, @distancias)
-            if costo_actual < min
-              min = costo_actual
-              proxima = ciudad
+    posibles_lugares_donde_ir = {}
+    tour_finalizado = false
+    until tour_finalizado
+      until tour.length == @cantidad_de_ciudades
+        min = Float::INFINITY
+        proxima = nil
+        if posibles_lugares_donde_ir[actual].nil? || posibles_lugares_donde_ir[actual].empty?
+          # caso en el que retrocedí y tengo que buscar un nuevo camino, por ende, ya sé a qué lugares puedo ir
+          posibles_lugares_donde_ir[actual] ||= []
+          for ciudad in @ciudades
+            unless tour.include?(ciudad)
+              unless nodo.restricciones.no_tiene_que_estar?(actual, ciudad)
+                posibles_lugares_donde_ir[actual] << ciudad
+                costo_actual = costo_en_llegar_a(ciudad, actual, @distancias)
+                if costo_actual < min
+                  min = costo_actual
+                  proxima = ciudad
+                end
+              end
+            end
+          end
+        else
+          for ciudad in @ciudades
+            unless tour.include?(ciudad)
+              unless nodo.restricciones.no_tiene_que_estar?(actual, ciudad)
+                if posibles_lugares_donde_ir[actual].include?(ciudad)
+                  costo_actual = costo_en_llegar_a(ciudad, actual, @distancias)
+                  if costo_actual < min
+                    min = costo_actual
+                    proxima = ciudad
+                  end
+                end
+              end
             end
           end
         end
+        return false if posibles_lugares_donde_ir[actual].empty? || proxima.nil? # acá sí me puedo ir
+        distancia += min
+        tour << proxima
+        actual = proxima
       end
-      if proxima.nil?
-        return false # no puedo armar un tour a causa de que realicé muchas exclusiones
+
+
+      # p "tour: #{tour}"
+      # p "a donde ir: #{posibles_lugares_donde_ir}"
+      if nodo.restricciones.no_tiene_que_estar?(tour.last, 0)
+        # o no, porque tengo restricción en ese eje
+        # retrocedo
+        posibles_lugares_donde_ir[actual] ||= []
+        while posibles_lugares_donde_ir[actual].length <= 1
+          anterior = tour.last
+          tour.delete anterior
+          distancia -= costo_en_llegar_a(actual, tour.last, @distancias)
+          actual = tour.last
+          return false if posibles_lugares_donde_ir[actual].nil? || posibles_lugares_donde_ir[actual].empty? # retrocedí demasiado, ya no hay chance de componer el tour
+        end
+        posibles_lugares_donde_ir[actual].delete anterior
+      else
+        # incluir la ciudad inicial para terminar el tour
+        distancia += costo_en_llegar_a(0, tour.last, @distancias)
+        tour << 0
+        tour_finalizado = true
       end
-      distancia += min
-      tour << proxima
-      actual = proxima
     end
-    # incluir la ciudad inicial para terminar el tour
-    distancia += costo_en_llegar_a(0, tour.last, @distancias)
-    tour << 0
 
     [tour, distancia]
   end
@@ -201,8 +241,9 @@ class BranchAndBoundTSP
     cota_superior_resultado = cota_superior(nodo)
     return false unless cota_superior_resultado
     nodo.cota_superior = cota_superior_resultado
-    # nodo.cota_inferior = cota_inferior(nodo) # 55608, 18s
-    nodo.cota_inferior = cota_inferior_hungara(nodo) # 15102, 20s
+    nodo.cota_inferior = cota_inferior(nodo) # 55608, 18s
+    # nodo.cota_inferior = cota_inferior_hungara(nodo) # 15102, 20s
+    # nodo.cota_inferior = 0 # ah re pete
 
     propagar_informacion_de_cotas(nodo)
     true
