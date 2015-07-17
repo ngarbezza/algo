@@ -11,26 +11,26 @@ class RestriccionesTSP
   end
 
   def tiene_que_estar?(desde, hasta)
-    @restricciones[desde][hasta] == 1 || @restricciones[hasta][desde] == 1
+    @restricciones[desde][hasta] == 1
   end
 
   def no_tiene_que_estar?(desde, hasta)
-    @restricciones[desde][hasta] == -1 || @restricciones[hasta][desde] == -1
+    @restricciones[desde][hasta] == -1
   end
 
   def incluir(desde, hasta)
     @restricciones[desde][hasta] = 1
     @restricciones[hasta][desde] = 1
-    @inclusiones[desde] = @inclusiones[desde] + 1
-    @inclusiones[hasta] = @inclusiones[hasta] + 1
+    @inclusiones[desde] += 1
+    @inclusiones[hasta] += 1
     @cantidad_de_inclusiones += 1
   end
 
   def desincluir(desde, hasta)
     @restricciones[desde][hasta] = 0
     @restricciones[hasta][desde] = 0
-    @inclusiones[desde] = @inclusiones[desde] - 1
-    @inclusiones[hasta] = @inclusiones[hasta] - 1
+    @inclusiones[desde] -= 1
+    @inclusiones[hasta] -= 1
     @cantidad_de_inclusiones -= 1
   end
 
@@ -47,9 +47,7 @@ class RestriccionesTSP
   def posible_proxima_restriccion(visitados, ultimo_paso)
     extremo = visitados.last
     for ciudad in @ciudades
-      ya_visitado = visitados.include?(ciudad)
-      termina_el_ciclo = ultimo_paso && visitados.include?(0)
-      if @restricciones[extremo][ciudad] == 0 && (!ya_visitado || termina_el_ciclo)
+      if @restricciones[extremo][ciudad] == 0 && (ultimo_paso || !visitados.include?(ciudad))
         return ciudad
       end
     end

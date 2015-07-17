@@ -1,4 +1,3 @@
-require_relative '../aux'
 require_relative 'restricciones_tsp'
 require_relative 'nodo_tsp'
 require_relative '../hungarian'
@@ -36,16 +35,16 @@ class BranchAndBoundTSP
         elsif restricciones.tiene_que_estar?(i, j)
           if primer_eje_elegido_por_ser_minimo
             segundo_eje_elegido = primer_eje_elegido # lo muevo de lugar para que entre el que tiene que estar sí o sí
-            primer_eje_elegido = costo_en_llegar_a(i, j, @distancias)
+            primer_eje_elegido = @distancias[i][j]
             primer_eje_elegido_por_ser_minimo = false
           elsif segundo_eje_elegido_por_ser_minimo
-            segundo_eje_elegido = costo_en_llegar_a(i, j, @distancias)
+            segundo_eje_elegido = @distancias[i][j]
             segundo_eje_elegido_por_ser_minimo = false
           else
             raise 'error en las definiciones de restricciones del TSP: no puede haber más de 2 ejes incidentes a un mismo vértice'
           end
         else
-          current = costo_en_llegar_a(i, j, @distancias)
+          current = @distancias[i][j]
           if primer_eje_elegido_por_ser_minimo && current < primer_eje_elegido
             segundo_eje_elegido = primer_eje_elegido
             primer_eje_elegido = current
@@ -66,7 +65,7 @@ class BranchAndBoundTSP
     resultado = alg.find_pairings
     dist = 0
     resultado.each do |pair|
-      dist += costo_en_llegar_a(pair[0], pair[1], @distancias)
+      dist += @distancias[pair[0]][pair[1]]
     end
     dist
   end
@@ -81,7 +80,7 @@ class BranchAndBoundTSP
         elsif restricciones.tiene_que_estar?(i, j)
           matriz[i][j] = -1                        # así lo elige siempre
         else
-          matriz[i][j] = costo_en_llegar_a(i, j, @distancias)
+          matriz[i][j] = @distancias[i][j]
         end
       end
     end
@@ -105,7 +104,7 @@ class BranchAndBoundTSP
           for ciudad in @ciudades
             unless nodo.restricciones.no_tiene_que_estar?(actual, ciudad) || tour.include?(ciudad)
               posibles_lugares_donde_ir[actual] << ciudad
-              costo_actual = costo_en_llegar_a(ciudad, actual, @distancias)
+              costo_actual = @distancias[ciudad][actual]
               if costo_actual < min
                 min = costo_actual
                 proxima = ciudad
@@ -116,7 +115,7 @@ class BranchAndBoundTSP
           # caso en el que retrocedí y tengo que buscar un nuevo camino, por ende, ya sé a qué lugares puedo ir
           for ciudad in posibles_lugares_donde_ir[actual]
             unless tour.include?(ciudad)
-              costo_actual = costo_en_llegar_a(ciudad, actual, @distancias)
+              costo_actual = @distancias[ciudad][actual]
               if costo_actual < min
                 min = costo_actual
                 proxima = ciudad
@@ -136,14 +135,14 @@ class BranchAndBoundTSP
         while posibles_lugares_donde_ir[actual].length <= 1
           anterior = tour.last
           tour.delete anterior
-          distancia -= costo_en_llegar_a(actual, tour.last, @distancias)
+          distancia -= @distancias[actual][tour.last]
           actual = tour.last
           return false if posibles_lugares_donde_ir[actual].nil? || posibles_lugares_donde_ir[actual].empty? # retrocedí demasiado, ya no hay chance de componer el tour
         end
         posibles_lugares_donde_ir[actual].delete anterior
       else
         # incluir la ciudad inicial para terminar el tour
-        distancia += costo_en_llegar_a(0, tour.last, @distancias)
+        distancia += @distancias[0][tour.last]
         tour << 0
         tour_finalizado = true
       end
@@ -158,17 +157,17 @@ class BranchAndBoundTSP
       ramificar(nodo_actual) if nodo_actual.no_hay_tour_completo?
       nodo_actual = procesar(nodo_actual)
       intentar_podar
-      puts "#{@total_nodos} nodos en el árbol, cota inferior #{@mejor_cota_inferior}, cota superior #{@mejor_cota_superior}"
+      # puts "#{@total_nodos} nodos en el árbol, cota inferior #{@mejor_cota_inferior}, cota superior #{@mejor_cota_superior}"
     end
     @solucion
   end
 
   def inicializar_resolucion
-    @nodos << nodo_inicial
+    nodo = nodo_inicial
+    @nodos << nodo
     @total_nodos = 1
-    nodo_actual = @nodos.first
-    calcular_cotas_para(nodo_actual)
-    nodo_actual
+    calcular_cotas_para(nodo)
+    nodo
   end
 
   def procesar(nodo_actual)
@@ -189,7 +188,7 @@ class BranchAndBoundTSP
       restricciones_rama_izquierda = nodo.restricciones.clone
       restricciones_rama_izquierda.incluir nodo.extremo, nueva_restriccion
       nuevo_tour = nodo.tour_actual + [nueva_restriccion]
-      nueva_distancia = nodo.distancia_actual + costo_en_llegar_a(nueva_restriccion, nodo.extremo, @distancias)
+      nueva_distancia = nodo.distancia_actual + @distancias[nueva_restriccion][nodo.extremo]
       rama_izquierda = NodoTSP.new nodo, restricciones_rama_izquierda, nuevo_tour, nueva_distancia
       resultado_cotas = calcular_cotas_para(rama_izquierda)
       if resultado_cotas
@@ -290,7 +289,7 @@ class BranchAndBoundTSP
   def puede_ser_podado?(nodo)
     cota_solucion = @mejor_cota_inferior_es_de_tour_completo ? @mejor_cota_inferior : @mejor_cota_superior
     nodo_no_puede_alcanzar_una_mejor_cota = nodo.cota_inferior >= cota_solucion
-    cotas_son_iguales = nodo.cota_inferior == nodo.cota_superior
+    cotas_son_iguales = nodo.cota_inferior == nodo.cota_superior[1]
     nodo_no_puede_alcanzar_una_mejor_cota || cotas_son_iguales
   end
 
