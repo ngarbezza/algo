@@ -1,10 +1,11 @@
 require_relative 'restricciones_tsp'
 require_relative 'nodo_tsp'
-require_relative '../hungarian'
+require_relative 'calculador_de_cota_inferior'
+require_relative 'calculador_de_cota_superior'
 
 class BranchAndBoundTSP
 
-  def initialize(cantidad_de_ciudades, distancias)
+  def initialize(cantidad_de_ciudades, distancias, calculador_de_cota_inferior, calculador_de_cota_superior, log)
     @cantidad_de_ciudades = cantidad_de_ciudades
     @ciudades = 0..@cantidad_de_ciudades-1
     @distancias = distancias
@@ -12,142 +13,9 @@ class BranchAndBoundTSP
     @total_nodos = 0
     @mejor_cota_inferior = 0
     @mejor_cota_superior = Float::INFINITY
-  end
-
-  ### COTA INFERIOR
-
-  def cota_inferior(nodo)
-    total = 0
-    for i in @ciudades
-      primer_eje_elegido = Float::INFINITY
-      primer_eje_elegido_por_ser_minimo = true
-      segundo_eje_elegido = Float::INFINITY
-      segundo_eje_elegido_por_ser_minimo = true
-
-      for j in @ciudades
-        if i == j
-          #nada que hacer
-        elsif !primer_eje_elegido_por_ser_minimo && !segundo_eje_elegido_por_ser_minimo
-          # nada que hacer
-        elsif nodo.restricciones.no_tiene_que_estar?(i, j)
-          # nada que hacer
-        elsif nodo.restricciones.tiene_que_estar?(i, j)
-          if primer_eje_elegido_por_ser_minimo
-            segundo_eje_elegido = primer_eje_elegido # lo muevo de lugar para que entre el que tiene que estar sí o sí
-            primer_eje_elegido = @distancias[i][j]
-            primer_eje_elegido_por_ser_minimo = false
-          elsif segundo_eje_elegido_por_ser_minimo
-            segundo_eje_elegido = @distancias[i][j]
-            segundo_eje_elegido_por_ser_minimo = false
-          else
-            raise 'error en las definiciones de restricciones del TSP: no puede haber más de 2 ejes incidentes a un mismo vértice'
-          end
-        else
-          current = @distancias[i][j]
-          if primer_eje_elegido_por_ser_minimo && current < primer_eje_elegido
-            segundo_eje_elegido = primer_eje_elegido
-            primer_eje_elegido = current
-          elsif segundo_eje_elegido_por_ser_minimo && current < segundo_eje_elegido
-            segundo_eje_elegido = current
-          end
-        end
-
-      end
-      total += primer_eje_elegido
-      total += segundo_eje_elegido
-    end
-    total.fdiv(2)
-  end
-
-  def cota_inferior_hungara(nodo)
-    alg = HungarianAlgorithm.new(matriz_para_algoritmo_matching(nodo.restricciones))
-    resultado = alg.find_pairings
-    dist = 0
-    resultado.each do |pair|
-      dist += @distancias[pair[0]][pair[1]]
-    end
-    dist
-  end
-
-  def matriz_para_algoritmo_matching(restricciones)
-    matriz = []
-    @ciudades.each do |i|
-      matriz[i] = []
-      @ciudades.each do |j|
-        if i == j || restricciones.no_tiene_que_estar?(i, j)
-          matriz[i][j] = Float::INFINITY           # así no lo elige nunca
-        elsif restricciones.tiene_que_estar?(i, j)
-          matriz[i][j] = -1                        # así lo elige siempre
-        else
-          matriz[i][j] = @distancias[i][j]
-        end
-      end
-    end
-    matriz
-  end
-
-  ### COTA SUPERIOR
-
-  def cota_superior(nodo)
-    tour = nodo.tour_actual.clone
-    distancia = nodo.distancia_actual
-    actual = tour.last
-    posibles_lugares_donde_ir = {}
-    tour_finalizado = false
-    until tour_finalizado
-      until tour.length == @cantidad_de_ciudades
-        min = Float::INFINITY
-        proxima = nil
-        if posibles_lugares_donde_ir[actual].nil? || posibles_lugares_donde_ir[actual].empty?
-          posibles_lugares_donde_ir[actual] ||= []
-          for ciudad in @ciudades
-            unless nodo.restricciones.no_tiene_que_estar?(actual, ciudad) || tour.include?(ciudad)
-              posibles_lugares_donde_ir[actual] << ciudad
-              costo_actual = @distancias[ciudad][actual]
-              if costo_actual < min
-                min = costo_actual
-                proxima = ciudad
-              end
-            end
-          end
-        else
-          # caso en el que retrocedí y tengo que buscar un nuevo camino, por ende, ya sé a qué lugares puedo ir
-          for ciudad in posibles_lugares_donde_ir[actual]
-            unless tour.include?(ciudad)
-              costo_actual = @distancias[ciudad][actual]
-              if costo_actual < min
-                min = costo_actual
-                proxima = ciudad
-              end
-            end
-          end
-        end
-        return false if posibles_lugares_donde_ir[actual].empty? || proxima.nil? # acá sí me puedo ir
-        distancia += min
-        tour << proxima
-        actual = proxima
-      end
-
-      if nodo.restricciones.no_tiene_que_estar?(tour.last, 0)
-        # o no, porque tengo restricción en ese eje
-        posibles_lugares_donde_ir[actual] ||= []
-        while posibles_lugares_donde_ir[actual].length <= 1
-          anterior = tour.last
-          tour.delete anterior
-          distancia -= @distancias[actual][tour.last]
-          actual = tour.last
-          return false if posibles_lugares_donde_ir[actual].nil? || posibles_lugares_donde_ir[actual].empty? # retrocedí demasiado, ya no hay chance de componer el tour
-        end
-        posibles_lugares_donde_ir[actual].delete anterior
-      else
-        # incluir la ciudad inicial para terminar el tour
-        distancia += @distancias[0][tour.last]
-        tour << 0
-        tour_finalizado = true
-      end
-    end
-
-    [tour, distancia]
+    @calculador_de_cota_superior = calculador_de_cota_superior.new(cantidad_de_ciudades, distancias)
+    @calculador_de_cota_inferior = calculador_de_cota_inferior.new(cantidad_de_ciudades, distancias)
+    @log = log
   end
 
   def resolver
@@ -156,9 +24,15 @@ class BranchAndBoundTSP
       ramificar(nodo_actual) if nodo_actual.no_hay_tour_completo?
       nodo_actual = procesar(nodo_actual)
       intentar_podar
-      # puts "#{@total_nodos} nodos en el árbol, cota inferior #{@mejor_cota_inferior}, cota superior #{@mejor_cota_superior}"
+      log_paso
     end
     @solucion + [@total_nodos]
+  end
+
+  def log_paso
+    if @log
+      puts "#{@total_nodos} nodos en el árbol, cota inferior #{@mejor_cota_inferior}, cota superior #{@mejor_cota_superior}"
+    end
   end
 
   def inicializar_resolucion
@@ -230,11 +104,10 @@ class BranchAndBoundTSP
   end
 
   def calcular_cotas_para(nodo)
-    cota_superior_resultado = cota_superior(nodo)
+    cota_superior_resultado = @calculador_de_cota_superior.calcular(nodo)
     return false unless cota_superior_resultado
     nodo.cota_superior = cota_superior_resultado
-    # nodo.cota_inferior = cota_inferior(nodo)
-    nodo.cota_inferior = cota_inferior_hungara(nodo)
+    nodo.cota_inferior = @calculador_de_cota_inferior.calcular(nodo)
 
     propagar_informacion_de_cotas(nodo)
     true
