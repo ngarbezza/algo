@@ -22,10 +22,6 @@ class NodoTSP
     @tour_actual.length == @restricciones.cantidad_de_ciudades
   end
 
-  def tour_completo
-    @tour_actual
-  end
-
   def extremo
     @tour_actual.last
   end

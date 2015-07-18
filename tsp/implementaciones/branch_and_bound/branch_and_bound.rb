@@ -18,7 +18,6 @@ class BranchAndBoundTSP
 
   def cota_inferior(nodo)
     total = 0
-    restricciones = nodo.restricciones
     for i in @ciudades
       primer_eje_elegido = Float::INFINITY
       primer_eje_elegido_por_ser_minimo = true
@@ -30,9 +29,9 @@ class BranchAndBoundTSP
           #nada que hacer
         elsif !primer_eje_elegido_por_ser_minimo && !segundo_eje_elegido_por_ser_minimo
           # nada que hacer
-        elsif restricciones.no_tiene_que_estar?(i, j)
+        elsif nodo.restricciones.no_tiene_que_estar?(i, j)
           # nada que hacer
-        elsif restricciones.tiene_que_estar?(i, j)
+        elsif nodo.restricciones.tiene_que_estar?(i, j)
           if primer_eje_elegido_por_ser_minimo
             segundo_eje_elegido = primer_eje_elegido # lo muevo de lugar para que entre el que tiene que estar sí o sí
             primer_eje_elegido = @distancias[i][j]
@@ -159,7 +158,7 @@ class BranchAndBoundTSP
       intentar_podar
       # puts "#{@total_nodos} nodos en el árbol, cota inferior #{@mejor_cota_inferior}, cota superior #{@mejor_cota_superior}"
     end
-    @solucion
+    @solucion + [@total_nodos]
   end
 
   def inicializar_resolucion
@@ -234,8 +233,8 @@ class BranchAndBoundTSP
     cota_superior_resultado = cota_superior(nodo)
     return false unless cota_superior_resultado
     nodo.cota_superior = cota_superior_resultado
-    nodo.cota_inferior = cota_inferior(nodo)
-    # nodo.cota_inferior = cota_inferior_hungara(nodo)
+    # nodo.cota_inferior = cota_inferior(nodo)
+    nodo.cota_inferior = cota_inferior_hungara(nodo)
 
     propagar_informacion_de_cotas(nodo)
     true

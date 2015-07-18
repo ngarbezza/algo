@@ -2,12 +2,12 @@ class RestriccionesTSP
 
   attr_reader :restricciones, :cantidad_de_ciudades
 
-  def initialize(ciudades, inclusiones=nil, restricciones=nil, cantidad_de_inclusiones=0)
+  def initialize(ciudades, restricciones=nil, inclusiones=nil, exclusiones=nil)
     @cantidad_de_ciudades = ciudades
     @ciudades = 0..@cantidad_de_ciudades-1
-    @inclusiones = inclusiones || [0] * @cantidad_de_ciudades
-    @cantidad_de_inclusiones = cantidad_de_inclusiones
     @restricciones = restricciones || inicializar_matriz_de_restricciones
+    @inclusiones = inclusiones || [0] * @cantidad_de_ciudades
+    @exclusiones = exclusiones || [0] * @cantidad_de_ciudades
   end
 
   def tiene_que_estar?(desde, hasta)
@@ -23,7 +23,6 @@ class RestriccionesTSP
     @restricciones[hasta][desde] = 1
     @inclusiones[desde] += 1
     @inclusiones[hasta] += 1
-    @cantidad_de_inclusiones += 1
   end
 
   def desincluir(desde, hasta)
@@ -31,17 +30,20 @@ class RestriccionesTSP
     @restricciones[hasta][desde] = 0
     @inclusiones[desde] -= 1
     @inclusiones[hasta] -= 1
-    @cantidad_de_inclusiones -= 1
   end
 
   def excluir(desde, hasta)
     @restricciones[desde][hasta] = -1
     @restricciones[hasta][desde] = -1
+    @exclusiones[desde] += 1
+    @exclusiones[hasta] += 1
   end
 
   def desexcluir(desde, hasta)
     @restricciones[desde][hasta] = 0
     @restricciones[hasta][desde] = 0
+    @exclusiones[desde] -= 1
+    @exclusiones[hasta] -= 1
   end
 
   def posible_proxima_restriccion(visitados, ultimo_paso)
@@ -56,7 +58,7 @@ class RestriccionesTSP
   end
 
   def clone
-    self.class.new @cantidad_de_ciudades, @inclusiones.clone, @restricciones.map(&:clone), @cantidad_de_inclusiones
+    self.class.new @cantidad_de_ciudades, @restricciones.map(&:clone), @inclusiones.clone, @exclusiones.clone
   end
 
   def puede_excluir?(desde, hasta)
@@ -75,7 +77,7 @@ class RestriccionesTSP
 
   def es_valido?
     !@ciudades.any? do |ciudad|
-      (@inclusiones[ciudad] > 2) || (@restricciones[ciudad].count(-1) > (@cantidad_de_ciudades-2))
+      (@inclusiones[ciudad] > 2) || (@exclusiones[ciudad] > (@cantidad_de_ciudades-2))
     end
   end
 
