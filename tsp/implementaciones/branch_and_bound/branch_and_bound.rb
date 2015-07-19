@@ -62,7 +62,7 @@ class BranchAndBoundTSP
       restricciones_rama_izquierda.incluir nodo.extremo, nueva_restriccion
       nuevo_tour = nodo.tour_actual + [nueva_restriccion]
       nueva_distancia = nodo.distancia_actual + @distancias[nueva_restriccion][nodo.extremo]
-      rama_izquierda = NodoTSP.new nodo, restricciones_rama_izquierda, nuevo_tour, nueva_distancia
+      rama_izquierda = NodoTSP.new restricciones_rama_izquierda, nuevo_tour, nueva_distancia
       resultado_cotas = calcular_cotas_para(rama_izquierda)
       if resultado_cotas
         nodo.hijo_izquierdo = rama_izquierda
@@ -76,7 +76,7 @@ class BranchAndBoundTSP
     if nodo.puede_excluir_del_tour? nueva_restriccion
       restricciones_rama_derecha = nodo.restricciones.clone
       restricciones_rama_derecha.excluir nodo.extremo, nueva_restriccion
-      rama_derecha = NodoTSP.new nodo, restricciones_rama_derecha, nodo.tour_actual, nodo.distancia_actual
+      rama_derecha = NodoTSP.new restricciones_rama_derecha, nodo.tour_actual, nodo.distancia_actual
       resultado_cotas = calcular_cotas_para(rama_derecha)
       if resultado_cotas
         nodo.hijo_derecho = rama_derecha
@@ -95,12 +95,11 @@ class BranchAndBoundTSP
   end
 
   def nodo_inicial
-    sin_padre = nil
     restricciones = RestriccionesTSP.new(@cantidad_de_ciudades)
     ciudad_inicial = 0
     tour_inicial = [ciudad_inicial]
     distancia_inicial = 0
-    NodoTSP.new sin_padre, restricciones, tour_inicial, distancia_inicial
+    NodoTSP.new restricciones, tour_inicial, distancia_inicial
   end
 
   def calcular_cotas_para(nodo)
