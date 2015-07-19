@@ -5,17 +5,17 @@ require_relative 'calculador_de_cota_superior'
 
 class BranchAndBoundTSP
 
-  def initialize(cantidad_de_ciudades, distancias, calculador_de_cota_inferior, calculador_de_cota_superior, log)
-    @cantidad_de_ciudades = cantidad_de_ciudades
+  def initialize(distancias, configuracion)
+    @cantidad_de_ciudades = distancias.length
     @ciudades = 0..@cantidad_de_ciudades-1
     @distancias = distancias
     @nodos = []
     @total_nodos = 0
     @mejor_cota_inferior = 0
     @mejor_cota_superior = Float::INFINITY
-    @calculador_de_cota_superior = calculador_de_cota_superior.new(cantidad_de_ciudades, distancias)
-    @calculador_de_cota_inferior = calculador_de_cota_inferior.new(cantidad_de_ciudades, distancias)
-    @log = log
+    @calculador_de_cota_inferior = configuracion[:calculador_de_cota_inferior].new(@cantidad_de_ciudades, distancias)
+    @calculador_de_cota_superior = configuracion[:calculador_de_cota_superior].new(@cantidad_de_ciudades, distancias)
+    @log = configuracion[:log_salida]
   end
 
   def resolver
