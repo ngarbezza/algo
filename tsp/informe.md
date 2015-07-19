@@ -4,22 +4,21 @@ por Nahuel Garbezza
 
 ## Introducción
 
-El objetivo del trabajo es realizar una implementación de un algoritmo Branch
-and Bound para resolver el problema del viajante de comercio (en inglés, TSP:
-Traveling Salesman Problem).
+El objetivo del trabajo es realizar una implementación de un algoritmo Branch and Bound para
+resolver el problema del viajante de comercio (en inglés, TSP: Traveling Salesman Problem).
 
 ## Descripción de la solución
 
 Se aplicó un algoritmo branch and bound de las siguientes características:
 
-- El criterio de branching es binario: la rama izquierda impone la restricción
-  de que un eje x->y debe estar en el camino, y la rama derecha impone la
-  restricción de que un eje x->y no debe estar en el camino.
-- El criterio de cuál nodo elegir es el siguiente: los nodos por procesar se
-  guardan en una lista, y en el momento de ramificar se ponen ambos nodos resultantes
-  en el tope de la lista (el derecho primero, luego el izquierdo), de manera que
-  sean los próximos en procesarse. Esto es para lograr llegar en profundidad a una
-  solución válida, que se puede utilizar para realizar mejores podas.
+- El criterio de branching es binario: la rama izquierda impone la restricción de que un eje
+  x->y debe estar en el camino, y la rama derecha impone la restricción de que un eje x->y no
+  debe estar en el camino.
+- El criterio de cuál nodo elegir es el siguiente: los nodos por procesar se guardan en una
+  lista, y en el momento de ramificar se ponen ambos nodos resultantes en el tope de la lista
+  (el derecho primero, luego el izquierdo), de manera que sean los próximos en procesarse. Esto
+  es para lograr llegar en profundidad a una solución válida, que se puede utilizar para realizar
+  mejores podas.
 - Cada nodo contiene la siguiente información:
     - El nodo padre
     - El resultado de la cota inferior y superior
@@ -29,19 +28,41 @@ Se aplicó un algoritmo branch and bound de las siguientes características:
 - La poda se intenta realizar en cada paso, teniendo en cuenta los datos de las
   mejores cotas inferior y superior, y si la cota inferior corresponde a una
   solución válida (en cuyo caso, también se puede usar para podar).
-- 
 
 ### Cota superior
 
-Se calculó usando la heurística del vecino más cercano. Esta consiste en
+Se calculó usando la heurística del vecino más cercano. Esta consiste en lo siguiente: posicionado
+en una ciudad arbitraria, seguir el camino más corto hacia otra ciudad no visitada, y repetir hasta
+llegar a la ciudad inicial. A medida que se van imponiendo restricciones en el árbol de soluciones,
+las decisiones son cada vez más acotadas.
+
+Las restricciones de exclusión (las del tipo: el eje x->y no puede formar parte de la solución),
+complicaron un poco el algoritmo. Lo que podía suceder es que se llegue siguiendo el camino más corto
+a un lugar del que después no se pueda volver a causa de las restricciones. Lo que realiza el algoritmo
+es: cuando detecta esta situación, vuelve al punto en donde tomó una decisión, y simplemente toma otra.
+Para ello se guarda para cada ciudad, las ciudades posibles a dónde ir, y esa lista se va actualizando
+a medida que las soluciones se van restringiendo. Si se agotan todos los caminos posibles, se retorna
+que no se pudo calcular la cota, entonces el nodo que estaba siendo procesado no puede procesarse más
+y simplemente es descartado (podado del árbol).
 
 ### Cota inferior
 
-Se experimentaron dos formas distintas de obtener cotas inferiores. Para probar el
-algoritmo se debe optar por alguna de las dos.
+Se experimentaron dos formas distintas de obtener cotas inferiores. Para probar el algoritmo se debe
+optar por alguna de las dos.
 
-- **Suma de pares de ejes con menor peso**:
-- **Algoritmo de asignación (o "Algoritmo Húngaro")**
+- **Suma de pares de ejes con menor peso**: Esta relajación del problema es sencilla de calcular.
+  Consiste en tomar, para cada ciudad, los dos ejes con menor peso incidentes a ese vértice, luego
+  sumar todos los ejes obtenidos y dividir ese resultado por dos. Obviamente, esto la mayoría de las
+  veces no da un tour válido, y por eso se dice que es una relajación del problema. A medida que se
+  van imponiendo restricciones, este algoritmo las tiene en cuenta, y en el caso en donde todas las
+  restricciones posibles están impuestas (es decir, el tour debe ser de una manera y no de otra) el
+  resultado de este algoritmo coincide con el de la cota superior.
+- **Algoritmo de asignación (o "Algoritmo Húngaro")**: Esta relajación fue la recomendada por la
+  materia para utilizar, y se utilizó una versión para Ruby actualmente implementada (https://github.com/pdamer/munkres).
+  La adaptación no costó demasiado, pero tuvo la gran desventaja de ser ineficiente y, a pesar de dar
+  resultados de cotas mucho mejores que la relajación anterior, aumentó el tiempo de ejecución y en
+  los profilings realizados durante las pruebas, se ve que el 76% del tiempo de todo el branch and bound
+  se pierde calculando esta cota.
 
 ## Problemas enfrentados durante la resolución
 
@@ -59,14 +80,23 @@ algoritmo se debe optar por alguna de las dos.
   se puede llevar en cada nodo, la información del tour actual, y la distancia total precalculada.
   Obviamente, esta decisión restringe varias posibilidades de brancheo, pero agrega demasiada
   complejidad al algoritmo.
-- El lenguaje elegido: Ruby. Si bien en la versión 2.2.2 (la última versión, y la utilizada en
+- El lenguaje elegido, Ruby. Si bien en la versión 2.2.2 (la última versión, y la utilizada en
   este trabajo) se realizaron varias mejoras en cuanto a la performance, aún sigue siendo poco
   útil para resolver este tipo de problemas.
 - El Garbage Collector de Ruby consumió el 16% del tiempo total medido en la mayoría de los ejemplos,
-  y no se pudo encontrar una mejor configuración(http://thorstenball.com/blog/2014/03/12/watching-understanding-ruby-2.1-garbage-collector/)
+  y no se pudo encontrar una mejor configuración (http://thorstenball.com/blog/2014/03/12/watching-understanding-ruby-2.1-garbage-collector/)
 - Algoritmo húngaro para calcular la cota inferior está implementado de manera muy ineficiente.
+- Memory leaks causados por la forma en la que los nodos se conocían. Cada nodo conocía a su nodo
+  padre, y a su hijo izquierdo y derecho. Cuando se podaba algún nodo, la referencia al nodo padre
+  hacía que no pueda ser limpiado por el GC, lo cual hacía incrementar el consumo de memoria hasta
+  colgar la computadora a los pocos minutos. Una vez detectada esta situación, se removió las
+  referencias al nodo padre, ya que no eran necesarias en la implementación.
 
-## Detalle de pruebas
+## Detalle de pruebas realizadas
+
+Para cada prueba se midió el tiempo total de ejecución usando el módulo de benchmarking incluido en
+las librerías estándar de Ruby. Para el profiling, se utilizó la herramienta perftools.rb (https://rubygems.org/gems/perftools.rb).
+Se adjuntan gráficos que muestran los tiempos de ejecución más altos, y las relaciones entre los mismos.
 
 ### Ejemplo de 11 ciudades
 
@@ -111,6 +141,18 @@ performance también incluidas de la prueba 3
     - **Finalizó con valor óptimo**: sí
     - **Tiempo total**: 175.111972 s
 
-## Conclusión
+## Conclusiones
 
-* El problema parece sencillo, pero posee muchas variantes que tieneesconde ciertos detalles No
+- El problema en su planteo teórico es sencillo, pero posee muchas variantes a la hora de implementarlo, y cada
+  una de ellas puede llevar a resultados muy diferentes.
+- Al tener tantos pasos involucrados es difícil tener noción de la complejidad en general, con lo cual hay que
+  asegurarse que cada una de las partes que componen el algoritmo no superen la complejidad polinomial.
+- Los resultados a nivel tiempo de ejecución no fueron los esperados, producto de varias razones: en primer lugar,
+  la performance en general de Ruby, y en segundo lugar, los algoritmos que no brindaron muy buenas cotas.
+- El trabajo me permitió aprender sobre optimizaciones de implementación, y me brindó herramientas para poder
+  eventualmente resolver otro tipo de problemas (más allá del problema del viajante de comercio) utilizando esta
+  misma técnica de branch and bound.
+- Es muy conveniente tener a mano las diferentes variantes para configurar el algoritmo (qué relajación utilizar,
+  cómo ir procesando los nodos, etc), ya que no hay una sola que se comporte mejor para todos los casos de prueba.
+- La información brindada por las herramientas de profiling de Ruby fueron muy útiles para realizar mejoras
+  importantes, aunque no mejoraron drásticamente los resultados.
