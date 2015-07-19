@@ -46,6 +46,15 @@ def ejemplo_16(algoritmo)
   tsp algoritmo, 16, 0, matriz_de_distancias(16)
 end
 
+def ejemplo_22(algoritmo)
+  # resultado óptimo esperado:
+  #
+  #  recorrido: 0 -> 13 -> 12 -> 11 -> 6 -> 5 -> 14 -> 4 -> 10 -> 8 -> 9 -> 18 -> 19 -> 20 -> 15 -> 2 -> 1 -> 16 -> 21 -> 3 -> 17 -> 7 -> 0
+  #  distancia: 7013
+  #
+  tsp algoritmo, 22, 0, matriz_de_distancias(22)
+end
+
 CARPETA_EJEMPLOS = 'ejemplos'
 
 def matriz_de_distancias(numero_de_ejemplo)
