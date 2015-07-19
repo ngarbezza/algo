@@ -16,6 +16,9 @@ class BranchAndBoundTSP
     @calculador_de_cota_inferior = configuracion[:calculador_de_cota_inferior].new(@cantidad_de_ciudades, distancias)
     @calculador_de_cota_superior = configuracion[:calculador_de_cota_superior].new(@cantidad_de_ciudades, distancias)
     @log = configuracion[:log_salida]
+    @procesar_ultimos_nodos_primero = configuracion[:procesar_ultimos_nodos_primero]
+    @procesar_rama_izquierda_primero = configuracion[:procesar_rama_izquierda_primero]
+    @procesar_nodos_al_azar = configuracion[:procesar_nodos_al_azar]
   end
 
   def resolver
@@ -52,8 +55,13 @@ class BranchAndBoundTSP
     nueva_restriccion = nodo.posible_proxima_restriccion
     return unless nueva_restriccion
 
-    agregar_rama_izquierda(nodo, nueva_restriccion)
-    agregar_rama_derecha(nodo, nueva_restriccion)
+    if @procesar_rama_izquierda_primero
+      agregar_rama_derecha(nodo, nueva_restriccion)
+      agregar_rama_izquierda(nodo, nueva_restriccion)
+    else
+      agregar_rama_izquierda(nodo, nueva_restriccion)
+      agregar_rama_derecha(nodo, nueva_restriccion)
+    end
   end
 
   def agregar_rama_izquierda(nodo, nueva_restriccion)
@@ -87,7 +95,13 @@ class BranchAndBoundTSP
   end
 
   def proximo_nodo_a_procesar
-    @nodos.first
+    if @procesar_nodos_al_azar
+      @nodos.sample
+    elsif @procesar_ultimos_nodos_primero
+      @nodos.first
+    else
+      @nodos.last
+    end
   end
 
   def hay_mas_nodos_por_explorar?
