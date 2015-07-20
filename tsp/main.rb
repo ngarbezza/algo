@@ -3,7 +3,7 @@ require_relative 'implementaciones/hungarian'
 require 'benchmark'
 
 # Ejemplos disponibles: 5, 6, 11, 16, 22
-ejemplo = 22
+ejemplo = 16
 
 configuracion = {
 

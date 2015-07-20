@@ -29,6 +29,13 @@ class BranchAndBoundTSP
       intentar_podar
       log_paso
     end
+    retornar_solucion
+  rescue Interrupt
+    puts 'Interrumpido por el usuario, retornando mejor solución hasta el momento...'
+    retornar_solucion
+  end
+
+  def retornar_solucion
     @solucion + [@total_nodos]
   end
 
