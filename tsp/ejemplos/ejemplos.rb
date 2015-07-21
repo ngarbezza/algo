@@ -4,7 +4,7 @@ require 'nokogiri'
 def ejemplo_4(algoritmo)
   # resultado óptimo esperado:
   #
-  #  recorrido: 0 -> 1 -> 2 -> 3 -> 0
+  #  recorrido: [0, 1, 2, 3, 0]
   #  distancia: 6
   #
   tsp algoritmo, 4, 0, matriz_de_distancias(4)
@@ -13,7 +13,7 @@ end
 def ejemplo_5(algoritmo)
   # resultado óptimo esperado:
   #
-  #  recorrido: 0 -> 2 -> 1 -> 4 -> 3 -> 0
+  #  recorrido: [0, 2, 1, 4, 3, 0]
   #  distancia: 19
   #
   tsp algoritmo, 5, 0, matriz_de_distancias(5)
@@ -22,7 +22,7 @@ end
 def ejemplo_6(algoritmo)
   # resultado óptimo esperado:
   #
-  #  recorrido: 0 -> 2 -> 1 -> 4 -> 3 -> -> 5 -> 0
+  #  recorrido: [0, 2, 1, 4, 3,, 5, 0]
   #  distancia: 15
   #
   tsp algoritmo, 6, 0, matriz_de_distancias(6)
@@ -31,7 +31,7 @@ end
 def ejemplo_11(algoritmo)
   # resultado óptimo esperado:
   #
-  #  recorrido: 0 -> 7 -> 4 -> 3 -> 9 -> 5 -> 2 -> 6 -> 1 -> 10 -> 8 -> 0
+  #  recorrido: [0, 7, 4, 3, 9, 5, 2, 6, 1, 10, 8, 0]
   #  distancia: 253
   #
   tsp algoritmo, 11, 0, matriz_de_distancias(11)
@@ -40,7 +40,7 @@ end
 def ejemplo_16(algoritmo)
   # resultado óptimo esperado:
   #
-  #  recorrido: 0 -> 13 -> 12 -> 11 -> 6 -> 5 -> 14 -> 4 -> 10 -> 8 -> 9 -> 15 -> 2 -> 1 -> 3 -> 7 -> 0
+  #  recorrido: [0, 13, 12, 11, 6, 5, 14, 4, 10, 8, 9, 15, 2, 1, 3, 7, 0]
   #  distancia: 6859
   #
   tsp algoritmo, 16, 0, matriz_de_distancias(16)
@@ -49,10 +49,19 @@ end
 def ejemplo_22(algoritmo)
   # resultado óptimo esperado:
   #
-  #  recorrido: 0 -> 13 -> 12 -> 11 -> 6 -> 5 -> 14 -> 4 -> 10 -> 8 -> 9 -> 18 -> 19 -> 20 -> 15 -> 2 -> 1 -> 16 -> 21 -> 3 -> 17 -> 7 -> 0
+  #  recorrido: [0, 13, 12, 11, 6, 5, 14, 4, 10, 8, 9, 18, 19, 20, 15, 2, 1, 16, 21, 3, 17, 7, 0]
   #  distancia: 7013
   #
   tsp algoritmo, 22, 0, matriz_de_distancias(22)
+end
+
+def ejemplo_29(algoritmo)
+  # resultado óptimo esperado:
+  #
+  #  recorrido: [0, 27, 5, 11, 8, 25, 2, 28, 4, 20, 1, 19, 9, 3, 14, 17, 13, 16, 21, 10, 18, 24, 6, 22, 7, 26, 15, 12, 23, 0]
+  #  distancia: 1610
+  #
+  tsp algoritmo, 29, 0, matriz_de_distancias(29)
 end
 
 CARPETA_EJEMPLOS = 'ejemplos'

@@ -9,6 +9,16 @@ def debe_terminar_recorrido?(un_recorrido)
   un_recorrido.last != un_recorrido.first
 end
 
+def calcular_distancia_total(tour, distancias)
+  distancia_total = 0
+  actual = 0
+  tour.each do |ciudad|
+    distancia_total += costo_en_llegar_a(ciudad, actual, distancias)
+    actual = ciudad
+  end
+  distancia_total
+end
+
 # Detección de ciclos en grafo representado con matriz de adyacencias
 # TODO: mejorar!
 
