@@ -141,7 +141,7 @@ class BranchAndBoundTSP
       @solucion = nodo.cota_superior
     end
 
-    if nodo.hay_tour_completo? #cota superior e inferior deberían coincidir
+    if nodo.hay_tour_completo? || nodo.cota_inferior == nodo.cota_superior[1]
 
       if @mejor_cota_inferior_es_de_tour_completo
         if nodo.cota_inferior < @mejor_cota_inferior
