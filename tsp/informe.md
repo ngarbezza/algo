@@ -25,9 +25,9 @@ Se aplicó un algoritmo branch and bound de las siguientes características:
     - El tour formado hasta el momento
     - La distancia total calculada hasta el momento
     - Un objeto que maneja las restricciones de inclusión/exclusión
-- La poda se intenta realizar en cada paso, teniendo en cuenta los datos de las
-  mejores cotas inferior y superior, y si la cota inferior corresponde a una
-  solución válida (en cuyo caso, también se puede usar para podar).
+- La poda se intenta realizar en cada paso, teniendo en cuenta los datos de las mejores cotas
+  inferior y superior, y si la cota inferior corresponde a una solución válida (en cuyo caso,
+  también se puede usar para podar).
 
 ### Cota superior
 
@@ -103,47 +103,42 @@ Se adjuntan gráficos que muestran los tiempos de ejecución más altos, y las r
 Tour óptimo [0, 7, 4, 3, 9, 5, 2, 6, 1, 10, 8, 0], distancia 253
 
 - Prueba 1
-    - **Tour**: 11 ciudades
     - **Cota superior**: heurística de vecino más cercano
     - **Cota inferior**: suma de pares de ejes con menor peso
-    - **Estrategia de elección de nodos**: últimos en la rama derecha primero
+    - **Elección de nodos**: últimos en la rama derecha primero
     - **Cantidad de nodos en el árbol**: 291497
     - **Finalizó con valor óptimo**: sí
     - **Tiempo total**: 114.334399 s
 
 - Prueba 2
-    - **Tour**: 11 ciudades
     - **Cota superior**: heurística de vecino más cercano
     - **Cota inferior**: algoritmo húngaro
-    - **Estrategia de elección de nodos**: últimos en la rama derecha primero
+    - **Elección de nodos**: últimos en la rama derecha primero
     - **Cantidad de nodos en el árbol**: 113143
     - **Finalizó con valor óptimo**: sí
     - **Tiempo total**: 203.533104 s
 
 - Prueba 3: similar a prueba 1 pero sin output de consola en cada paso del algoritmo
-    - **Tour**: 11 ciudades
     - **Cota superior**: heurística de vecino más cercano
     - **Cota inferior**: suma de pares de ejes con menor peso
-    - **Estrategia de elección de nodos**: últimos en la rama derecha primero
+    - **Elección de nodos**: últimos en la rama derecha primero
     - **Cantidad de nodos en el árbol**: 291497
     - **Finalizó con valor óptimo**: sí
     - **Tiempo total**: 84.483877 s
 
 - Prueba 4: similar a prueba 3 pero con pequeñas optimizaciones de performance en algunos métodos
-    - **Tour**: 11 ciudades
     - **Cota superior**: heurística de vecino más cercano
     - **Cota inferior**: suma de pares de ejes con menor peso
-    - **Estrategia de elección de nodos**: últimos en la rama derecha primero
+    - **Elección de nodos**: últimos en la rama derecha primero
     - **Cantidad de nodos en el árbol**: 291497
     - **Finalizó con valor óptimo**: sí
     - **Tiempo total**: 67.169276 s
 
 - Prueba 5: similar a prueba 2 pero sin output de consola en cada paso, y con las pequeñas optimizaciones de
 performance también incluidas de la prueba 3
-    - **Tour**: 11 ciudades
     - **Cota superior**: heurística de vecino más cercano
     - **Cota inferior**: algoritmo húngaro
-    - **Estrategia de elección de nodos**: últimos en la rama derecha primero
+    - **Elección de nodos**: últimos en la rama derecha primero
     - **Cantidad de nodos en el árbol**: 113143
     - **Finalizó con valor óptimo**: sí
     - **Tiempo total**: 175.111972 s
@@ -152,14 +147,55 @@ performance también incluidas de la prueba 3
 
 Tour óptimo [0, 13, 12, 11, 6, 5, 14, 4, 10, 8, 9, 15, 2, 1, 3, 7, 0], distancia 6859
 
-Pruebas por realizar
+- Prueba 6:
+    - **Cota superior**: heurística de vecino más cercano
+    - **Cota inferior**: algoritmo húngaro
+    - **Elección de nodos**: al azar
+    - **Cantidad de nodos en el árbol**: 58340
+    - **Finalizó con valor óptimo**: no
+    - **Mejor resultado obtenido**: tour [0, 2, 1, 3, 7, 6, 5, 9, 8, 10, 4, 14, 13, 12, 11, 15, 0], distancia 7077
+    - **Tiempo total**: 290s
+
+- Prueba 7:
+    - **Cota superior**: heurística de vecino más cercano
+    - **Cota inferior**: suma de pares de ejes con menor peso
+    - **Elección de nodos**: últimos en la rama derecha primero
+    - **Cantidad de nodos en el árbol**: 761632
+    - **Finalizó con valor óptimo**: no
+    - **Mejor resultado obtenido**: tour [0, 2, 1, 3, 7, 15, 12, 13, 11, 6, 5, 14, 4, 9, 8, 10, 0], distancia 8026
+    - **Tiempo total**: 594s
 
 ### Ejemplo de 29 ciudades
 
 Tour óptimo [0, 27, 5, 11, 8, 25, 2, 28, 4, 20, 1, 19, 9, 3, 14, 17, 13, 16, 21, 10, 18, 24, 6, 22, 7, 26, 15, 12, 23, 0], distancia 1610
 
-Pruebas por realizar
+- Prueba 8:
+    - **Cota superior**: heurística de vecino más cercano
+    - **Cota inferior**: algoritmo húngaro
+    - **Elección de nodos**: primeros en la rama izquierda primero
+    - **Cantidad de nodos en el árbol**: 147
+    - **Finalizó con valor óptimo**: no
+    - **Mejor resultado obtenido**: tour [0, 27, 5, 11, 8, 4, 20, 1, 19, 9, 3, 14, 18, 24, 6, 22, 26, 23, 7, 15, 12, 17, 13, 21, 16, 10, 28, 2, 25, 0], distancia 1960
+    - **Tiempo total**: 0.940994s
 
+- Prueba 9:
+    - **Cota superior**: heurística de vecino más cercano
+    - **Cota inferior**: algoritmo húngaro
+    - **Elección de nodos**: al azar
+    - **Cantidad de nodos en el árbol**: 9749
+    - **Finalizó con valor óptimo**: no
+    - **Mejor resultado obtenido**: tour [0, 5, 12, 9, 19, 1, 20, 4, 8, 25, 28, 2, 11, 27, 7, 26, 23, 15, 18, 14, 3, 17, 13, 21, 16, 10, 24, 6, 22, 0], distancia 1930
+    - **Tiempo total**: 89.813231s
+
+- Prueba 10:
+    - **Cota superior**: heurística de vecino más cercano
+    - **Cota inferior**: algoritmo húngaro
+    - **Elección de nodos**: últimos en la rama derecha primero
+    - **Cantidad de nodos en el árbol**: 255
+    - **Finalizó con valor óptimo**: no
+    - **Mejor resultado obtenido**: tour [0, 27, 5, 11, 8, 4, 20, 1, 19, 9, 3, 14, 18, 24, 6, 22, 26, 23, 7, 15, 12, 17, 13, 21, 16, 10, 28, 2, 25, 0], distancia 1960 
+    - **Tiempo total**: 2.170210s
+    
 ## Conclusiones
 
 - El problema en su planteo teórico es sencillo, pero posee muchas variantes a la hora de implementarlo, y cada
